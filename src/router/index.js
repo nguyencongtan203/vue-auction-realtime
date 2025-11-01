@@ -5,6 +5,7 @@ import Cookies from 'js-cookie'
 import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
 import AuctionRoom from '../components/AuctionRoom.vue'
+import PhongDauGia from '../views/PhongDauGia.vue'
 
 const routes = [
   {
@@ -16,6 +17,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login,
+  },
+  {
+    path: '/phong-dau-gia',
+    name: 'PhongDauGia',
+    component: PhongDauGia
   },
   {
     path: '/auction',

@@ -67,7 +67,7 @@
             </div>
           </div>
 
-          <a href="#" class="hover:text-sky-600">Phương thức đấu giá</a>
+          <a href="/phong-dau-gia" class="hover:text-sky-600">Phòng đấu giá</a>
           <a href="#" class="hover:text-sky-600">Kiến thức</a>
           <a href="#" class="hover:text-sky-600">Tin tức</a>
         </nav>
@@ -188,7 +188,7 @@
             <div v-else class="text-xs text-slate-500 px-2 py-1">Đang tải danh mục…</div>
           </div>
 
-          <a href="#" class="block py-2">Phương thức đấu giá</a>
+          <a href="/phong-dau-gia" class="block py-2">Phòng đấu giá</a>
           <a href="#" class="block py-2">Kiến thức</a>
           <a href="#" class="block py-2">Tin tức</a>
 
