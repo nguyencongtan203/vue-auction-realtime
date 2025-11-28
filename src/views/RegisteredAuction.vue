@@ -7,7 +7,7 @@
       <section class="max-w-[1200px] mx-auto px-4 lg:px-6 pt-2">
         <div class="flex items-end justify-center">
           <h1
-            class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight"
+            class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
           >
             PHIÊN ĐĂNG KÝ
           </h1>
@@ -153,33 +153,41 @@
               </div>
             </div>
           </div>
-
-          <!-- Pagination -->
-          <div class="flex items-center justify-center gap-3 pt-2">
-            <button
-              class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
-              :disabled="page.first"
-              @click="goTo(page.number - 1)"
-            >
-              « Trước
-            </button>
-            <span>Trang {{ page.number + 1 }} / {{ page.totalPages }}</span>
-            <button
-              class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
-              :disabled="page.last"
-              @click="goTo(page.number + 1)"
-            >
-              Sau »
-            </button>
-          </div>
         </div>
       </section>
+      <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
+    <div
+      class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+    >
+      <nav
+        class="flex items-center gap-2"
+        role="navigation"
+        aria-label="Pagination"
+      >
+        <button class="page-pill" @click="prevPage" :disabled="!canPrev">
+          ‹ Trước
+        </button>
+        <button
+          v-for="n in numericPages"
+          :key="n"
+          class="page-num"
+          :class="n === currentPage ? 'page-num--active' : ''"
+          @click="goTo(n - 1)"
+        >
+          {{ n }}
+        </button>
+        <button class="page-pill" @click="nextPage" :disabled="!canNext">
+          Sau ›
+        </button>
+      </nav>
+    </div>
+  </section>
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, onActivated, watch } from "vue";
+import { ref, onMounted, onUnmounted, onActivated, watch,computed } from "vue";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter, useRoute } from "vue-router";
@@ -205,7 +213,30 @@ const page = ref({
 
 const size = ref(12);
 const sort = ref("thoigianbd,desc");
+const currentPage = computed(() => page.value.number + 1);
+const canPrev = computed(() => !page.value.first);
+const canNext = computed(() => !page.value.last);
 
+const numericPages = computed(() => {
+  const total = page.value.totalPages;
+  const p = page.value.number + 1;
+  const windowSize = 3;
+  let start = Math.max(1, p - Math.floor(windowSize / 2));
+  let end = start + windowSize - 1;
+  if (end > total) {
+    end = total;
+    start = Math.max(1, end - windowSize + 1);
+  }
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+});
+
+function prevPage() {
+  if (canPrev.value) goTo(page.value.number - 1);
+}
+
+function nextPage() {
+  if (canNext.value) goTo(page.value.number + 1);
+}
 // Timer cho countdown
 const now = ref(Date.now());
 let timer = null;
@@ -307,7 +338,7 @@ async function fetchAuctions(pageNumber = 0) {
       page.value = {
         content: result.content || [],
         totalElements: result.totalElements || 0,
-        totalPages: result.totalPages || 0,
+        totalPages: result.page.totalPages || 0,
         number: result.number || 0,
         first: !!result.first,
         last: !!result.last,
@@ -332,6 +363,7 @@ async function fetchAuctions(pageNumber = 0) {
 function goTo(n) {
   if (n < 0 || n >= page.value.totalPages) return;
   fetchAuctions(n);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // Refetch khi quay lại trang (keep-alive)
@@ -342,23 +374,21 @@ onActivated(() => {
   }
 });
 
-// Lắng nghe thay đổi query (nếu tương lai có phân trang bằng query)
 watch(
   () => route.fullPath,
   () => {
-    // route thay đổi nhưng vẫn cùng component -> có thể muốn refetch
     if (!inFlight.value) fetchAuctions(page.value.number);
   }
 );
 
-// Event bus: khi trang khác tạo phiên / thanh toán cọc
+// khi trang khác tạo phiên / thanh toán cọc
 function onAuctionPaidChanged() {
-  // Reset về trang đầu tiên để chắc chắn thấy phiên mới
+  // Reset về trang đầu tiên
   fetchAuctions(0);
 }
 window.addEventListener("auction-paid:changed", onAuctionPaidChanged);
 
-// Visibility (user quay lại tab)
+// Visibility
 function onVisibility() {
   if (document.visibilityState === "visible" && !inFlight.value) {
     fetchAuctions(page.value.number);
@@ -380,6 +410,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import "@/assets/styles/home.css";
 .image-loading {
   position: absolute;
   inset: 0;

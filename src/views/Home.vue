@@ -309,7 +309,7 @@
               aria-label="Pagination"
             >
               <button class="page-pill" @click="prevPage" :disabled="!canPrev">
-                ‹ Back
+                ‹ Trước
               </button>
               <button
                 v-for="n in numericPages"
@@ -321,12 +321,9 @@
                 {{ n }}
               </button>
               <button class="page-pill" @click="nextPage" :disabled="!canNext">
-                Next ›
+                Sau ›
               </button>
             </nav>
-            <div class="text-xs text-slate-500 mt-1">
-              Trang {{ page }} / {{ totalPages }}
-            </div>
           </div>
         </section>
       </div>
@@ -510,7 +507,7 @@ async function fetchAuctions() {
 
     if (res.data?.code === 200 && res.data.result) {
       const pg = res.data.result;
-      totalPages.value = pg.totalPages || 1;
+      totalPages.value = pg.page.totalPages || 1;
 
       pageContent.value = (pg.content || []).map((it) => {
         const imgSrc = it.sanPham?.hinhAnh?.[0]?.tenanh

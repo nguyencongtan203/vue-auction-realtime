@@ -284,7 +284,6 @@
 
 .pager-btn:disabled {
   opacity: .45;
-  cursor: not-allowed;
 }
 
 .pager-info {

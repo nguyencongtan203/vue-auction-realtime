@@ -122,10 +122,10 @@
               <font-awesome-icon :icon="faBell" class="text-xl" style="color: #0f6bae" />
               <!-- Badge số thông báo chưa đọc -->
               <span
-                v-if="unreadCount > 0"
+                v-if="totalUnread > 0"
                 class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full"
               >
-                {{ unreadCount > 99 ? "99+" : unreadCount }}
+                {{ totalUnread > 99 ? "99+" : totalUnread }}
               </span>
             </button>
 
@@ -136,16 +136,17 @@
                 v-if="showNotifications"
                 id="dropdownMenu"
                 class="absolute block left-0 bg-white py-4 z-[1000] min-w-full rounded-lg w-[410px] max-h-[500px] overflow-auto mt-2 border border-slate-200 shadow-xl rounded-xl z-50"
+                @scroll="onScroll"
               >
                 <div class="flex items-center justify-between px-4 mb-4">
                   <p
-                    class="text-xs text-blue-600 font-medium cursor-pointer"
+                    class="text-xs text-[#0f6bae] font-medium cursor-pointer"
                     @click="clearAllNotifications"
                   >
                     Xóa tất cả
                   </p>
                   <p
-                    class="text-xs text-blue-600 font-medium cursor-pointer"
+                    class="text-xs text-[#0f6bae] font-medium cursor-pointer"
                     @click="markAllAsRead"
                   >
                     Đánh dấu tất cả đã đọc
@@ -180,7 +181,7 @@
                         >
                           {{ notif.noidung }}
                         </p>
-                        <p class="text-xs text-blue-600 font-medium leading-3 mt-2">
+                        <p class="text-xs text-[#0f6bae] font-medium leading-3 mt-2">
                           {{ formatDate(notif.thoigian) }}
                         </p>
                       </div>
@@ -193,12 +194,15 @@
                     Không có thông báo mới
                   </div>
                 </ul>
-                <p
-                  class="text-xs px-4 mt-6 mb-4 inline-block text-blue-600 font-medium cursor-pointer"
+                <div v-if="loadingMore" class="text-center py-2 text-xs text-slate-500">
+                  Đang tải thêm...
+                </div>
+                <!-- <p
+                  class="text-xs px-4 mt-6 mb-4 inline-block text-[#0f6bae] font-medium cursor-pointer"
                   @click="goToAllNotifications"
                 >
                   Xem tất cả thông báo
-                </p>
+                </p> -->
               </div>
             </transition>
           </div>
@@ -531,7 +535,7 @@ const showToast = (message, type = "success") => {
 // Notifications
 const auctionNotificationStore = useAuctionNotificationStore();
 const notifications = computed(() => auctionNotificationStore.notifications);
-const unreadCount = computed(() => auctionNotificationStore.unreadCount);
+const totalUnread = computed(() => auctionNotificationStore.totalUnread);
 const showNotifications = ref(false);
 const notificationDropdown = ref(null);
 const notificationButton = ref(null);
@@ -579,10 +583,10 @@ onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
 });
 
-const goToAllNotifications = () => {
-  router.push({ name: "Notifications" });
-  showNotifications.value = false;
-};
+// const goToAllNotifications = () => {
+//   router.push({ name: "Notifications" });
+//   showNotifications.value = false;
+// };
 
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
@@ -686,6 +690,37 @@ function openLogin() {
 function openRegister() {
   authPopup?.value?.open("register");
 }
+const currentPage = ref(0);
+const hasNext = ref(true);
+const loadingMore = ref(false);
+
+const loadMore = async () => {
+  if (loadingMore.value || !hasNext.value) return;
+  loadingMore.value = true;
+  currentPage.value++;
+  const result = await auctionNotificationStore.loadNotifications(currentPage.value, 5);
+  if (result) {
+    hasNext.value = !result.last && result.content.length > 0;
+  }
+  loadingMore.value = false;
+};
+
+const onScroll = (event) => {
+  const target = event.target;
+  // Detect scroll gần bottom (50px threshold)
+  if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
+    loadMore();
+  }
+};
+
+// Load ban đầu
+onMounted(async () => {
+  const result = await auctionNotificationStore.loadNotifications(0, 5);
+  if (result) {
+    hasNext.value = !result.last;
+    currentPage.value = 0; // Reset
+  }
+});
 </script>
 <style scoped>
 @import "@/assets/styles/toast.css";

@@ -2,6 +2,17 @@
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white fade-in"
   >
+    <!-- Header -->
+    <section class="max-w-[1200px] mx-auto px-4 lg:px-6 pt-2">
+      <div class="flex items-end justify-center">
+        <h1
+          class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
+        >
+          THANH TOÁN
+        </h1>
+      </div>
+    </section>
+
     <!-- Tabs -->
     <div
       class="menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3 max-w-[1024px] mx-auto"
@@ -46,8 +57,9 @@
         <span
           v-if="inFlight"
           class="inline-flex items-center text-[11px] px-2 py-1 rounded bg-sky-100 text-sky-700"
-          >Đang cập nhật...</span
         >
+          Đang cập nhật...
+        </span>
       </div>
 
       <!-- Loading / Error -->
@@ -122,22 +134,41 @@
         </div>
       </div>
 
-      <!-- Pager -->
-      <div v-if="depositTotalPages > 1" class="pager">
-        <button class="pager-btn" @click="prevPage" :disabled="depositPage <= 1">
-          ‹ Prev
-        </button>
-        <span class="pager-info">
-          Trang <strong>{{ depositPage }}</strong> / {{ depositTotalPages }}
-        </span>
-        <button
-          class="pager-btn"
-          @click="nextPage"
-          :disabled="depositPage >= depositTotalPages"
+      <!-- PHÂN TRANG cho deposit -->
+      <section
+        v-if="depositTotalPages == 1"
+        class="max-w-[1024px] mx-auto px-6 lg:px-8 py-6 lg:py-8"
+      >
+        <div
+          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
         >
-          Next ›
-        </button>
-      </div>
+          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+            <button
+              class="page-pill"
+              @click="prevDepositPage"
+              :disabled="!canPrevDeposit"
+            >
+              ‹ Trước
+            </button>
+            <button
+              v-for="n in numericPagesDeposit"
+              :key="n"
+              class="page-num"
+              :class="n === depositPage ? 'page-num--active' : ''"
+              @click="goToDepositPage(n)"
+            >
+              {{ n }}
+            </button>
+            <button
+              class="page-pill"
+              @click="nextDepositPage"
+              :disabled="!canNextDeposit"
+            >
+              Sau ›
+            </button>
+          </nav>
+        </div>
+      </section>
     </div>
 
     <!-- TAB: THẮNG PHIÊN -->
@@ -164,8 +195,9 @@
         <span
           v-if="winInFlight"
           class="inline-flex items-center text-[11px] px-2 py-1 rounded bg-sky-100 text-sky-700"
-          >Đang cập nhật...</span
         >
+          Đang cập nhật...
+        </span>
       </div>
 
       <!-- Loading / Error -->
@@ -244,28 +276,39 @@
         </div>
       </div>
 
-      <!-- Pager -->
-      <div v-if="winTotalPages > 1" class="pager">
-        <button class="pager-btn" @click="prevWinPage" :disabled="winPage <= 1">
-          ‹ Prev
-        </button>
-        <span class="pager-info">
-          Trang <strong>{{ winPage }}</strong> / {{ winTotalPages }}
-        </span>
-        <button
-          class="pager-btn"
-          @click="nextWinPage"
-          :disabled="winPage >= winTotalPages"
+      <!-- PHÂN TRANG cho win -->
+      <section
+        v-if="winTotalPages == 1"
+        class="max-w-[1024px] mx-auto px-6 lg:px-8 py-6 lg:py-8"
+      >
+        <div
+          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
         >
-          Next ›
-        </button>
-      </div>
+          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+            <button class="page-pill" @click="prevWinPage" :disabled="!canPrevWin">
+              ‹ Trước
+            </button>
+            <button
+              v-for="n in numericPagesWin"
+              :key="n"
+              class="page-num"
+              :class="n === winPage ? 'page-num--active' : ''"
+              @click="goToWinPage(n)"
+            >
+              {{ n }}
+            </button>
+            <button class="page-pill" @click="nextWinPage" :disabled="!canNextWin">
+              Sau ›
+            </button>
+          </nav>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated, onUnmounted, watch } from "vue";
+import { ref, onMounted, onActivated, onUnmounted, watch, computed } from "vue";
 import axios from "axios";
 import Cookies from "js-cookie";
 
@@ -273,34 +316,65 @@ defineOptions({ name: "DepositPayments" });
 
 const API = "http://localhost:8082/api";
 const deposits = ref([]);
-const wins = ref([]); // Thêm cho win
+const wins = ref([]);
 const loading = ref(true);
-const winLoading = ref(false); // Thêm cho win
+const winLoading = ref(false);
 const error = ref(null);
-const winError = ref(null); // Thêm cho win
+const winError = ref(null);
 const activeTab = ref("deposit");
 const activeSubTab = ref("UNPAID");
-const activeWinSubTab = ref("UNPAID"); // Thêm cho win
+const activeWinSubTab = ref("UNPAID");
 const inFlight = ref(false);
-const winInFlight = ref(false); // Thêm cho win
+const winInFlight = ref(false);
 const payingItems = ref({});
-const payingWinItems = ref({}); // Thêm cho win
+const payingWinItems = ref({});
 const depositPage = ref(1);
-const winPage = ref(1); // Thêm cho win
-const depositPageSize = ref(20);
-const winPageSize = ref(20); // Thêm cho win
+const winPage = ref(1);
+const depositPageSize = ref(8);
+const winPageSize = ref(8);
 const depositTotalPages = ref(1);
-const winTotalPages = ref(1); // Thêm cho win
+const winTotalPages = ref(1);
 
 let abortController = null;
-let winAbortController = null; // Thêm cho win
+let winAbortController = null;
 let visibilityHandlerAdded = false;
 
+// Computed cho deposit
+const canPrevDeposit = computed(() => depositPage.value > 1);
+const canNextDeposit = computed(() => depositPage.value < depositTotalPages.value);
+
+const numericPagesDeposit = computed(() => {
+  const total = depositTotalPages.value;
+  const p = depositPage.value;
+  const windowSize = 3;
+  let start = Math.max(1, p - Math.floor(windowSize / 2));
+  let end = start + windowSize - 1;
+  if (end > total) {
+    end = total;
+    start = Math.max(1, end - windowSize + 1);
+  }
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+});
+
+// Computed cho win
+const canPrevWin = computed(() => winPage.value > 1);
+const canNextWin = computed(() => winPage.value < winTotalPages.value);
+
+const numericPagesWin = computed(() => {
+  const total = winTotalPages.value;
+  const p = winPage.value;
+  const windowSize = 3;
+  let start = Math.max(1, p - Math.floor(windowSize / 2));
+  let end = start + windowSize - 1;
+  if (end > total) {
+    end = total;
+    start = Math.max(1, end - windowSize + 1);
+  }
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+});
+
 const formatCurrency = (n) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(n || 0);
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n || 0);
 
 const formatDate = (iso) => {
   if (!iso) return "-";
@@ -358,7 +432,7 @@ async function fetchDeposits() {
     if (res.data.code === 200) {
       const page = res.data.result;
       deposits.value = page.content || [];
-      depositTotalPages.value = page.totalPages || 1;
+      depositTotalPages.value = page.page.totalPages || 1;
     } else {
       error.value = res.data.message || "Tải dữ liệu thất bại.";
     }
@@ -373,7 +447,6 @@ async function fetchDeposits() {
 }
 
 async function fetchWins() {
-  // Thêm function cho win
   if (activeTab.value !== "win") return;
   winLoading.value = wins.value.length === 0;
   winError.value = null;
@@ -402,7 +475,7 @@ async function fetchWins() {
     if (res.data.code === 200) {
       const page = res.data.result;
       wins.value = page.content || [];
-      winTotalPages.value = page.totalPages || 1;
+      winTotalPages.value = page.page.totalPages || 1;
     } else {
       winError.value = res.data.message || "Tải dữ liệu thất bại.";
     }
@@ -423,10 +496,13 @@ function changeSubTab(newTab) {
 }
 
 function changeWinSubTab(newTab) {
-  // Thêm cho win
   activeWinSubTab.value = newTab;
   winPage.value = 1;
   fetchWins();
+}
+
+function goToDepositPage(n) {
+  goToPage(n);
 }
 
 function goToPage(n) {
@@ -438,16 +514,15 @@ function goToPage(n) {
   }
 }
 
-function prevPage() {
-  if (depositPage.value > 1) goToPage(depositPage.value - 1);
+function prevDepositPage() {
+  if (canPrevDeposit.value) goToPage(depositPage.value - 1);
 }
 
-function nextPage() {
-  if (depositPage.value < depositTotalPages.value) goToPage(depositPage.value + 1);
+function nextDepositPage() {
+  if (canNextDeposit.value) goToPage(depositPage.value + 1);
 }
 
 function goToWinPage(n) {
-  // Thêm cho win
   const safe = Math.min(Math.max(1, n), winTotalPages.value);
   if (safe !== winPage.value) {
     winPage.value = safe;
@@ -457,13 +532,11 @@ function goToWinPage(n) {
 }
 
 function prevWinPage() {
-  // Thêm cho win
-  if (winPage.value > 1) goToWinPage(winPage.value - 1);
+  if (canPrevWin.value) goToWinPage(winPage.value - 1);
 }
 
 function nextWinPage() {
-  // Thêm cho win
-  if (winPage.value < winTotalPages.value) goToWinPage(winPage.value + 1);
+  if (canNextWin.value) goToWinPage(winPage.value + 1);
 }
 
 function onDepositChanged() {
@@ -471,7 +544,6 @@ function onDepositChanged() {
 }
 
 function onWinChanged() {
-  // Thêm cho win
   fetchWins();
 }
 
@@ -504,7 +576,6 @@ async function handlePay(item) {
 }
 
 async function handleWinPay(item) {
-  // Thêm cho win
   payingWinItems.value[item.matt] = true;
   try {
     const res = await axios.get(`${API}/payments/create-order`, {
@@ -539,7 +610,7 @@ onMounted(() => {
   fetchDeposits();
   fetchWins();
   window.addEventListener("deposit-payments:changed", onDepositChanged);
-  window.addEventListener("win-payments:changed", onWinChanged); // Thêm cho win
+  window.addEventListener("win-payments:changed", onWinChanged);
   if (!visibilityHandlerAdded) {
     document.addEventListener("visibilitychange", onVisibilityChange);
     visibilityHandlerAdded = true;
@@ -548,17 +619,18 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener("deposit-payments:changed", onDepositChanged);
-  window.removeEventListener("win-payments:changed", onWinChanged); // Thêm cho win
+  window.removeEventListener("win-payments:changed", onWinChanged);
   if (visibilityHandlerAdded) {
     document.removeEventListener("visibilitychange", onVisibilityChange);
     visibilityHandlerAdded = false;
   }
   if (abortController) abortController.abort();
-  if (winAbortController) winAbortController.abort(); // Thêm cho win
+  if (winAbortController) winAbortController.abort();
 });
 </script>
 
 <style scoped>
+@import "@/assets/styles/home.css";
 /* =====================================
    CÁC PHẦN CÒN LẠI GIỮ NGUYÊN (CARD, STATUS…)
    ===================================== */

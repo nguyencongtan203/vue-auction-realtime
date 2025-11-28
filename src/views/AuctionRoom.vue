@@ -1,5 +1,5 @@
-<template >
-  <div class="max-w-[1400px] mx-auto px-4 lg:px-6 mt-5 relative" >
+<template>
+  <div class="max-w-[1400px] mx-auto px-4 lg:px-6 mt-5 relative">
     <!-- Toolbar -->
     <div
       class="toolbar flex flex-wrap items-center gap-3 justify-center max-w-[1200px] mx-auto border-b border-slate-200"
@@ -207,7 +207,9 @@
           >
             <div class="space-y-3">
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Từ ngày</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1"
+                  >Từ ngày</label
+                >
                 <input
                   v-model="dateRange.from"
                   type="date"
@@ -215,7 +217,9 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Đến ngày</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1"
+                  >Đến ngày</label
+                >
                 <input
                   v-model="dateRange.to"
                   type="date"
@@ -385,7 +389,7 @@
         class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
       >
         <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-          <button class="page-pill" @click="prevPage" :disabled="!canPrev">‹ Back</button>
+          <button class="page-pill" @click="prevPage" :disabled="!canPrev">‹ Trước</button>
           <button
             v-for="n in numericPages"
             :key="n"
@@ -395,9 +399,8 @@
           >
             {{ n }}
           </button>
-          <button class="page-pill" @click="nextPage" :disabled="!canNext">Next ›</button>
+          <button class="page-pill" @click="nextPage" :disabled="!canNext">Sau ›</button>
         </nav>
-        <div class="text-xs text-slate-500 mt-2">Trang {{ page }} / {{ totalPages }}</div>
       </div>
     </section>
   </div>
@@ -435,7 +438,7 @@ const priceRange = reactive({ min: null, max: null });
 const dateRange = reactive({ from: "", to: "" });
 
 const page = ref(1);
-const pageSize = ref(12);
+const pageSize = ref(8);
 const totalPages = ref(1);
 
 const now = ref(Date.now());
@@ -536,9 +539,12 @@ const viTime = (ts) => {
 };
 const parseDateTime = (str) => new Date(str).getTime() || Date.now();
 const formatDate = (dateStr) => {
-  if (!dateStr) return '';
+  if (!dateStr) return "";
   const d = new Date(dateStr);
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(
+    2,
+    "0"
+  )}/${d.getFullYear()}`;
 };
 
 function extractErrorMessage(err) {
@@ -614,23 +620,31 @@ async function fetchAuctions() {
 
     if (res.data?.code === 200 && res.data.result) {
       const pg = res.data.result;
-      totalPages.value = pg.totalPages || 1;
+      totalPages.value = pg.page.totalPages || 1;
 
       pageContent.value = (pg.content || []).map((it) => {
-        const src = it.sanPham?.hinhAnh?.[0]?.tenanh
+        const imgSrc = it.sanPham?.hinhAnh?.[0]?.tenanh
           ? getImageUrl(it.sanPham.hinhAnh[0].tenanh)
           : null;
         const item = {
           id: it.maphiendg,
           title: it.sanPham?.tensp || "Không rõ tên",
-          image: src,
+          image: imgSrc,
           startAt: parseDateTime(it.thoigianbd),
           endAt: parseDateTime(it.thoigiankt),
           priceStartVnd: it.giakhoidiem || 0,
           cateId: it.sanPham?.danhMuc?.madm ?? it.sanPham?.madm ?? null,
           region: it.sanPham?.thanhPho?.matp ?? null,
         };
-        imgState[item.id] = src ? "loading" : "error";
+        if (imgSrc) {
+          const img = new Image();
+          img.onload = () => (imgState[item.id] = "loaded");
+          img.onerror = () => (imgState[item.id] = "error");
+          img.src = imgSrc;
+          imgState[item.id] = "loading"; // Tạm thời loading
+        } else {
+          imgState[item.id] = "error";
+        }
         return item;
       });
     } else {

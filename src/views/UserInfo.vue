@@ -1,6 +1,10 @@
 <template>
   <div class="min-h-screen flex flex-col items-center bg-gray-50 py-10 px-4">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-8">THÔNG TIN TÀI KHOẢN</h2>
+    <h2
+      class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
+    >
+      THÔNG TIN TÀI KHOẢN
+    </h2>
 
     <!-- Toast chỉ dành cho lỗi/ thông báo từ server -->
     <transition name="slide-fade">

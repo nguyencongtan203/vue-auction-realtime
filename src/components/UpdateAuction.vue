@@ -8,7 +8,7 @@
       <!-- Header -->
       <div class="flex justify-center mb-6 border-b pb-3 relative">
         <h2 class="text-2xl font-semibold text-gray-800 text-center">
-          TẠO PHIÊN ĐẤU GIÁ
+          CHỈNH SỬA PHIÊN ĐẤU GIÁ
         </h2>
         <button
           class="absolute right-0 top-0 text-gray-500 hover:text-gray-700 text-xl"
@@ -20,18 +20,27 @@
       </div>
 
       <form class="grid grid-cols-1 md:grid-cols-2 gap-5" @submit.prevent="save">
+        <!-- Mã phiên (read-only) -->
         <div class="flex flex-col md:flex-row md:items-start gap-3">
-          <label class="w-52 font-medium text-gray-700">Mã sản phẩm</label>
-          <p class="font-semibold text-gray-700 w-full">{{ form.masp }}</p>
+          <label class="w-52 font-medium text-gray-700">Mã phiên</label>
+          <p class="font-semibold text-gray-700 w-full">{{ form.maphiendg }}</p>
         </div>
 
+        <!-- Mã sản phẩm (read-only) -->
+        <div class="flex flex-col md:flex-row md:items-start gap-3">
+          <label class="w-52 font-medium text-gray-700">Mã sản phẩm</label>
+          <p class="font-semibold text-gray-700 w-full">{{ form.sanPham?.masp }}</p>
+        </div>
+
+        <!-- Giá khởi điểm (read-only) -->
         <div class="flex flex-col md:flex-row md:items-start gap-3">
           <label class="w-52 font-medium text-gray-700">Giá khởi điểm</label>
           <p class="font-semibold text-gray-700 w-full">
-            {{ formatPrice(form.giamongdoi) }}
+            {{ formatPrice(form.giakhoidiem) }}
           </p>
         </div>
 
+        <!-- Fields có thể edit -->
         <template v-for="f in fields" :key="f.key">
           <div class="flex flex-col md:flex-row md:items-start gap-3">
             <label class="w-52 font-medium text-gray-700">{{ f.label }}</label>
@@ -52,6 +61,7 @@
           </div>
         </template>
 
+        <!-- Time fields -->
         <template v-for="t in timeFields" :key="t.key">
           <div class="flex flex-col md:flex-row md:items-start gap-3">
             <label class="w-52 font-medium text-gray-700">{{ t.label }}</label>
@@ -85,14 +95,14 @@
           @click="save"
           :disabled="submitting"
         >
-          <span v-if="submitting">Đang tạo...</span>
-          <span v-else>Tạo phiên</span>
+          <span v-if="submitting">Đang lưu...</span>
+          <span v-else>Cập nhật</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Toast (giữ đúng template đã chuẩn hoá trước đó) -->
+  <!-- Toast -->
   <transition name="slide-fade">
     <div v-if="toastSafe.show" class="fixed top-5 right-5 z-[60]">
       <div
@@ -139,9 +149,9 @@ const API = "http://localhost:8082/api";
 // Props & Emits
 const props = defineProps({
   visible: Boolean,
-  product: Object,
+  auction: Object,
 });
-const emit = defineEmits(["close", "created"]);
+const emit = defineEmits(["close", "updated"]);
 
 // Constants
 const fields = [
@@ -157,8 +167,9 @@ const timeFields = [
 
 // Reactive state
 const form = reactive({
-  masp: "",
-  giamongdoi: "",
+  maphiendg: "",
+  sanPham: null,
+  giakhoidiem: "",
   buocgia: "",
   tiencoc: "",
   thoigianbd: "",
@@ -235,7 +246,7 @@ function hideToast() {
 }
 
 function onNumberInput(field, e) {
-  let val = e.target.value.replace(/[^\d]/g, ""); // Chỉ giữ số
+  let val = e.target.value.replace(/[^\d]/g, "");
   form[field] = val ? Number(val) : "";
   formattedValues[field] = val ? new Intl.NumberFormat("vi-VN").format(Number(val)) : "";
 }
@@ -308,28 +319,25 @@ const save = async () => {
   submitting.value = true;
   try {
     const payload = {
-      masp: form.masp,
+      buocgia: form.buocgia,
+      tiencoc: form.tiencoc,
       thoigianbd: formatDateTime(form.thoigianbd),
       thoigiankt: formatDateTime(form.thoigiankt),
       thoigianbddk: formatDateTime(form.thoigianbddk),
       thoigianktdk: formatDateTime(form.thoigianktdk),
-      giakhoidiem: form.giamongdoi, // Sử dụng giá mong đợi làm khởi điểm
-      buocgia: form.buocgia,
-      tiencoc: form.tiencoc,
     };
 
-    const res = await axios.post(`${API}/auctions/create`, payload, {
+    const res = await axios.put(`${API}/auctions/update/${form.maphiendg}`, payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // Chuẩn BE: { code, message, result }
-    const { code, message, result } = res.data || {};
+    const { code, message } = res.data || {};
     if (code === 200) {
-      showToast(message || "Tạo phiên đấu giá thành công!", "success");
-      emit("created", result); // gửi kèm DTO nếu cần dùng
+      showToast(message || "Cập nhật phiên đấu giá thành công!", "success");
+      emit("updated");
       setTimeout(() => close(), 600);
     } else {
-      showToast(message || "Tạo phiên thất bại!", "error");
+      showToast(message || "Cập nhật thất bại!", "error");
     }
   } catch (err) {
     const msg = extractErrorMessage(err);
@@ -351,20 +359,22 @@ const formatPrice = (price) => {
 
 // Watch
 watch(
-  () => props.product,
-  (p) => {
-    if (!p) return;
+  () => props.auction,
+  (a) => {
+    if (!a) return;
     Object.assign(form, {
-      masp: p.masp,
-      giamongdoi: p.giamongdoi,
-      buocgia: "",
-      tiencoc: "",
-      thoigianbd: "",
-      thoigiankt: "",
-      thoigianbddk: "",
-      thoigianktdk: "",
+      maphiendg: a.maphiendg,
+      sanPham: a.sanPham,
+      giakhoidiem: a.giakhoidiem,
+      buocgia: a.buocgia,
+      tiencoc: a.tiencoc,
+      thoigianbd: a.thoigianbd ? new Date(a.thoigianbd).toISOString().slice(0, 16) : "",
+      thoigiankt: a.thoigiankt ? new Date(a.thoigiankt).toISOString().slice(0, 16) : "",
+      thoigianbddk: a.thoigianbddk ? new Date(a.thoigianbddk).toISOString().slice(0, 16) : "",
+      thoigianktdk: a.thoigianktdk ? new Date(a.thoigianktdk).toISOString().slice(0, 16) : "",
     });
-    Object.assign(formattedValues, { buocgia: "", tiencoc: "" });
+    formattedValues.buocgia = a.buocgia ? new Intl.NumberFormat("vi-VN").format(a.buocgia) : "";
+    formattedValues.tiencoc = a.tiencoc ? new Intl.NumberFormat("vi-VN").format(a.tiencoc) : "";
     Object.keys(errors).forEach((k) => (errors[k] = ""));
   },
   { immediate: true }
