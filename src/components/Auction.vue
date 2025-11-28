@@ -86,7 +86,7 @@
                 id="bidStep"
                 type="number"
                 v-model.number="bidStep"
-                min="1"
+                :min="minBidStep"
                 :disabled="isWaiting || sending || !canBid"
                 class="w-24 px-3 py-1.5 rounded-md border border-slate-300 bg-slate-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
               />
@@ -105,7 +105,7 @@
             <div class="flex-1 min-w-full sm:min-w-[220px]">
               <small v-if="canBid" class="block text-[11px] text-slate-500 leading-snug">
                 Tổng tăng = bước giá × số lần: {{ formatCurrency(stepPrice) }} ×
-                {{ bidStep || 1 }}
+                {{ bidStep || minBidStep }}
               </small>
               <small v-else class="block text-[11px] text-amber-600 leading-snug">
                 Phiên chưa bắt đầu hoặc đã kết thúc.
@@ -242,7 +242,7 @@ const sending = ref(false);
 const actionError = ref("");
 const stompConnected = ref(false);
 const isWaiting = ref(false);
-const countdown = ref(20);
+const countdown = ref(10);
 let countdownTimer = null;
 let stompClient = null;
 let stompSubscription = null;
@@ -283,6 +283,12 @@ const statusClass = computed(() => {
   if (st.includes("end") || st.includes("kết thúc") || st.includes("closed"))
     return "ended";
   return "neutral";
+});
+
+// Thêm computed minBidStep
+const minBidStep = computed(() => {
+  // Nếu giá cao nhất đạt được === 0 (lần đầu), cho phép 0; ngược lại >=1
+  return highestPrice.value === 0 ? 0 : 1;
 });
 
 const totalPages = computed(() =>
@@ -384,7 +390,7 @@ async function fetchAuction() {
       const r = res.data.result;
       productName.value = r?.sanPham?.tensp || "";
       startPrice.value = Number(r?.giakhoidiem || 0);
-      highestPrice.value = Number(r?.giacaonhatdatduoc || r?.giakhoidiem || 0);
+      highestPrice.value = Number(r?.giacaonhatdatduoc || 0); // Sửa: không fallback giaKhoiDiem
       stepPrice.value = Number(r?.buocgia || 0);
       startTime.value = r?.thoigianbd || null;
       endTime.value = r?.thoigiankt || null;
@@ -500,8 +506,8 @@ function sendBid() {
     actionError.value = "Đang trong thời gian chờ.";
     return;
   }
-  if (!Number.isInteger(bidStep.value) || bidStep.value < 1) {
-    actionError.value = "Số lần phải ≥ 1.";
+  if (!Number.isInteger(bidStep.value) || bidStep.value < minBidStep.value) {
+    actionError.value = `Số lần phải ≥ ${minBidStep.value}.`;
     return;
   }
   sending.value = true;

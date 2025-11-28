@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col items-center bg-gray-50 py-10 px-4">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-8">ĐĂNG KÝ SẢN PHẨM</h2>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-8">ĐĂNG KÝ TÀI SẢN</h2>
 
     <!-- Toast -->
     <transition name="slide-fade">
@@ -25,7 +25,9 @@
       </div>
     </transition>
 
-    <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">Đang tải dữ liệu...</div>
+    <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">
+      Đang tải dữ liệu...
+    </div>
 
     <form v-else @submit.prevent="submitProduct" class="w-full max-w-3xl space-y-5">
       <div class="form-row fade-in">
@@ -50,6 +52,7 @@
             option-value="value"
             option-label="label"
             :error="!!errors.category"
+            :errorMessage="errors.category"
             placeholder="-- Chọn danh mục --"
           />
           <p v-if="errors.category" class="error-msg">{{ errors.category }}</p>
@@ -57,28 +60,17 @@
       </div>
 
       <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Giá ước tính</label>
-        <div class="flex-1 flex items-center gap-2">
+        <label class="w-40 text-sm text-gray-700 font-bold">Giá mong đợi</label>
+        <div class="flex-1">
           <input
-            v-model.number="product.priceMin"
-            type="number"
-            min="10000"
-            class="input w-32"
-            :class="{ error: errors.priceMin }"
-            placeholder="Thấp nhất"
-            @input="validatePrice"
+            v-model="formattedPrice"
+            type="text"
+            class="input"
+            :class="{ error: errors.expectedPrice }"
+            placeholder="Ví dụ: 10.000"
+            @input="onPriceInput"
           />
-          <span class="text-gray-500">-</span>
-          <input
-            v-model.number="product.priceMax"
-            type="number"
-            class="input w-32"
-            :class="{ error: errors.priceMax }"
-            placeholder="Cao nhất"
-            @input="validatePrice"
-          />
-          <p v-if="errors.priceMin" class="error-msg">{{ errors.priceMin }}</p>
-          <p v-if="errors.priceMax" class="error-msg">{{ errors.priceMax }}</p>
+          <p v-if="errors.expectedPrice" class="error-msg">{{ errors.expectedPrice }}</p>
         </div>
       </div>
 
@@ -104,6 +96,7 @@
             option-value="value"
             option-label="label"
             :error="!!errors.city"
+            :errorMessage="errors.city"
             placeholder="-- Chọn thành phố --"
           />
           <p v-if="errors.city" class="error-msg">{{ errors.city }}</p>
@@ -152,8 +145,11 @@
       </div>
 
       <div class="pt-6 flex justify-end gap-3">
-        <button type="submit" class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash">
-          Đăng Ký Sản Phẩm
+        <button
+          type="submit"
+          class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+        >
+          Đăng Ký Tài Sản
         </button>
       </div>
     </form>
@@ -171,8 +167,7 @@ const API = "http://localhost:8082/api";
 const product = ref({
   name: "",
   category: "",
-  priceMin: null,
-  priceMax: null,
+  expectedPrice: null,
   condition: "",
   city: "",
   images: [],
@@ -183,6 +178,7 @@ const cities = ref([]);
 const errors = ref({});
 const loading = ref(true);
 const toast = ref({ show: false, message: "", type: "success" });
+const formattedPrice = ref("");
 
 /* Toast meta */
 const toastMeta = computed(() => {
@@ -233,18 +229,12 @@ const showToast = (msg, type = "success") => {
   setTimeout(() => (toast.value.show = false), 3000);
 };
 
-const validatePrice = () => {
-  if (product.value.priceMin !== null && product.value.priceMin < 10000) {
-    errors.value.priceMin = "Giá thấp nhất phải từ 10.000 trở lên.";
-  } else {
-    delete errors.value.priceMin;
-  }
-  if (product.value.priceMax !== null && product.value.priceMin !== null && product.value.priceMax < product.value.priceMin) {
-    errors.value.priceMax = "Giá cao nhất phải lớn hơn hoặc bằng giá thấp nhất.";
-  } else {
-    delete errors.value.priceMax;
-  }
-};
+/* Price input */
+function onPriceInput(e) {
+  let val = e.target.value.replace(/[^\d]/g, ""); // Chỉ giữ số
+  product.value.expectedPrice = val ? Number(val) : null;
+  formattedPrice.value = val ? new Intl.NumberFormat("vi-VN").format(Number(val)) : "";
+}
 
 /* Ảnh: sanitize và preview */
 const handleImage = (e) => {
@@ -284,10 +274,10 @@ const removeImage = (index) => {
 
 /* Options cho dropdown */
 const catOptions = computed(() =>
-  (categories.value || []).map(c => ({ value: String(c.madm), label: c.tendm }))
+  (categories.value || []).map((c) => ({ value: String(c.madm), label: c.tendm }))
 );
 const cityOptions = computed(() =>
-  (cities.value || []).map(c => ({ value: String(c.matp), label: c.tentp }))
+  (cities.value || []).map((c) => ({ value: String(c.matp), label: c.tentp }))
 );
 
 /* Submit sản phẩm + ảnh */
@@ -296,9 +286,10 @@ const submitProduct = async () => {
   // Trim và validate
   if (!product.value.name.trim()) errors.value.name = "Nhập tên sản phẩm.";
   if (!product.value.category) errors.value.category = "Chọn danh mục.";
-  if (product.value.priceMin === null || product.value.priceMin < 10000) errors.value.priceMin = "Giá thấp nhất phải từ 10.000 trở lên.";
-  if (product.value.priceMax === null || product.value.priceMax < product.value.priceMin) errors.value.priceMax = "Giá cao nhất phải lớn hơn hoặc bằng giá thấp nhất.";
-  if (!product.value.condition.trim()) errors.value.condition = "Nhập tình trạng sản phẩm.";
+  if (product.value.expectedPrice === null || product.value.expectedPrice < 10000)
+    errors.value.expectedPrice = "Giá mong đợi phải từ 10.000 trở lên.";
+  if (!product.value.condition.trim())
+    errors.value.condition = "Nhập tình trạng sản phẩm.";
   if (!product.value.city) errors.value.city = "Chọn thành phố.";
   if (product.value.images.length === 0) errors.value.images = "Thêm ít nhất 1 ảnh.";
   if (Object.keys(errors.value).length > 0) return;
@@ -316,20 +307,19 @@ const submitProduct = async () => {
       matp: product.value.city.trim(),
       tensp: product.value.name.trim(),
       tinhtrangsp: product.value.condition.trim(),
-      giathapnhat: product.value.priceMin,
-      giacaonhat: product.value.priceMax,
+      giamongdoi: product.value.expectedPrice,
     };
     const res = await axios.post(`${API}/products/create`, productPayload, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (res.data?.code !== 200) {
-      showToast(res.data?.message || "Tạo sản phẩm thất bại!", "error");
+      showToast(res.data?.message || "Đăng ký tài sản thất bại!", "error");
       return;
     }
 
     const masp = res.data.result.masp;
-    showToast("Tạo sản phẩm thành công!", "success");
+    showToast("Đăng ký tài sản thành công!", "success");
 
     // 2) Upload ảnh ban đầu
     if (product.value.images.length > 0) {
@@ -353,11 +343,19 @@ const submitProduct = async () => {
     }
 
     // 3) Reset form + phát sự kiện để trang quản lý tự refetch
-    product.value = { name: "", category: "", priceMin: null, priceMax: null, condition: "", city: "", images: [] };
+    product.value = {
+      name: "",
+      category: "",
+      expectedPrice: null,
+      condition: "",
+      city: "",
+      images: [],
+    };
+    formattedPrice.value = "";
     window.dispatchEvent(new CustomEvent("products:changed"));
   } catch (err) {
     console.error(err);
-    showToast("Đăng ký sản phẩm thất bại!", "error");
+    showToast("Đăng ký tài sản thất bại!", "error");
   }
 };
 

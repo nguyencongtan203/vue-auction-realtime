@@ -27,12 +27,9 @@
 
         <div class="flex flex-col md:flex-row md:items-start gap-3">
           <label class="w-52 font-medium text-gray-700">Giá khởi điểm</label>
-          <p class="font-semibold text-gray-700 w-full">{{ formatPrice(form.giakhoidiem) }}</p>
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-start gap-3">
-          <label class="w-52 font-medium text-gray-700">Giá trần</label>
-          <p class="font-semibold text-gray-700 w-full">{{ formatPrice(form.giatran) }}</p>
+          <p class="font-semibold text-gray-700 w-full">
+            {{ formatPrice(form.giamongdoi) }}
+          </p>
         </div>
 
         <template v-for="f in fields" :key="f.key">
@@ -40,14 +37,12 @@
             <label class="w-52 font-medium text-gray-700">{{ f.label }}</label>
             <div class="flex flex-col w-full">
               <input
-                v-model="form[f.key]"
-                @input="validateNumber(f.key)"
+                v-model="formattedValues[f.key]"
+                @input="onNumberInput(f.key, $event)"
                 type="text"
                 inputmode="numeric"
-                :class="[
-                  'border border-gray-300 rounded-md px-3 py-2 w-full focus:ring focus:ring-blue-200 outline-none transition',
-                  errors[f.key] ? 'border-red-500 focus:ring-red-200' : ''
-                ]"
+                class="input"
+                :class="{ error: errors[f.key] }"
                 :placeholder="`Nhập ${f.label.toLowerCase()}`"
               />
               <small v-if="errors[f.key]" class="text-red-500 text-sm mt-1">
@@ -65,10 +60,8 @@
                 v-model="form[t.key]"
                 type="datetime-local"
                 @change="validateTimes"
-                :class="[
-                  'border border-gray-300 rounded-md px-3 py-2 w-full focus:ring focus:ring-blue-200 outline-none transition',
-                  errors[t.key] ? 'border-red-500 focus:ring-red-200' : ''
-                ]"
+                class="input"
+                :class="{ error: errors[t.key] }"
               />
               <small v-if="errors[t.key]" class="text-red-500 text-sm mt-1">
                 {{ errors[t.key] }}
@@ -78,7 +71,7 @@
         </template>
       </form>
 
-      <div class="pt-6 flex justify-end gap-3 border-t mt-6">
+      <div class="pt-6 flex justify-end gap-3 mt-6">
         <button
           type="button"
           class="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
@@ -88,7 +81,7 @@
         </button>
         <button
           type="button"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed max-w-[180px]"
+          class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
           @click="save"
           :disabled="submitting"
         >
@@ -102,16 +95,18 @@
   <!-- Toast (giữ đúng template đã chuẩn hoá trước đó) -->
   <transition name="slide-fade">
     <div v-if="toastSafe.show" class="fixed top-5 right-5 z-[60]">
-      <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow relative">
+      <div
+        class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow relative"
+      >
         <div class="flex items-center justify-center w-12" :class="toastMeta.barBg">
           <svg
             class="w-6 h-6 text-white fill-current"
             viewBox="0 0 40 40"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <template v-for="(d,i) in toastMeta.iconPaths" :key="i">
+            <template v-for="(d, i) in toastMeta.iconPaths" :key="i">
               <path :d="d" />
-              </template>
+            </template>
           </svg>
         </div>
         <div class="px-4 py-2 -mx-3">
@@ -126,7 +121,9 @@
           class="absolute top-1 right-1 text-slate-400 hover:text-slate-600 text-xs"
           @click="hideToast"
           aria-label="Đóng toast"
-        >✕</button>
+        >
+          ✕
+        </button>
       </div>
     </div>
   </transition>
@@ -137,34 +134,48 @@ import { reactive, ref, watch, computed } from "vue";
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API = "http://localhost:8082/api"; // giữ nguyên biến API
+const API = "http://localhost:8082/api";
 
+// Props & Emits
 const props = defineProps({
   visible: Boolean,
   product: Object,
 });
 const emit = defineEmits(["close", "created"]);
 
-/* ----- Toast khai báo SỚM ----- */
+// Constants
+const fields = [
+  { key: "buocgia", label: "Bước giá" },
+  { key: "tiencoc", label: "Tiền cọc" },
+];
+const timeFields = [
+  { key: "thoigianbddk", label: "Thời gian bắt đầu đăng ký" },
+  { key: "thoigianktdk", label: "Thời gian kết thúc đăng ký" },
+  { key: "thoigianbd", label: "Thời gian bắt đầu phiên" },
+  { key: "thoigiankt", label: "Thời gian kết thúc phiên" },
+];
+
+// Reactive state
+const form = reactive({
+  masp: "",
+  giamongdoi: "",
+  buocgia: "",
+  tiencoc: "",
+  thoigianbd: "",
+  thoigiankt: "",
+  thoigianbddk: "",
+  thoigianktdk: "",
+});
+const errors = reactive({});
+const submitting = ref(false);
 const toast = ref({ show: false, message: "", type: "info" });
+const formattedValues = reactive({ buocgia: "", tiencoc: "" });
 
-/* Fallback an toàn cho template (tránh undefined) */
-const toastSafe = computed(() => toast.value || { show: false, message: "", type: "info" });
+// Computed
+const toastSafe = computed(
+  () => toast.value || { show: false, message: "", type: "info" }
+);
 
-function showToast(message, type = "success", duration = 3000) {
-  toast.value = { show: true, message, type };
-  window.clearTimeout(hideTimer.value);
-  hideTimer.value = window.setTimeout(() => {
-    if (toast.value) toast.value.show = false;
-  }, duration);
-}
-const hideTimer = ref(null);
-function hideToast() {
-  if (toast.value) toast.value.show = false;
-  window.clearTimeout(hideTimer.value);
-}
-
-/* Meta theo type (giống template trước) */
 const toastMeta = computed(() => {
   const t = (toastSafe.value.type || "info").toLowerCase();
   if (t === "success") {
@@ -208,59 +219,40 @@ const toastMeta = computed(() => {
   };
 });
 
-/* ----- Form & Validate ----- */
-const form = reactive({
-  masp: "",
-  giatran: "",
-  giakhoidiem: "",
-  buocgia: "",
-  tiencoc: "",
-  thoigianbd: "",
-  thoigiankt: "",
-  thoigianbddk: "",
-  thoigianktdk: "",
-});
-const fields = [
-  { key: "buocgia", label: "Bước giá" },
-  { key: "tiencoc", label: "Tiền cọc" },
-];
-const timeFields = [
-  { key: "thoigianbddk", label: "Thời gian bắt đầu đăng ký" },
-  { key: "thoigianktdk", label: "Thời gian kết thúc đăng ký" },
-  { key: "thoigianbd", label: "Thời gian bắt đầu phiên" },
-  { key: "thoigiankt", label: "Thời gian kết thúc phiên" },
-];
+// Functions
+function showToast(message, type = "success", duration = 3000) {
+  toast.value = { show: true, message, type };
+  window.clearTimeout(hideTimer.value);
+  hideTimer.value = window.setTimeout(() => {
+    if (toast.value) toast.value.show = false;
+  }, duration);
+}
 
-const errors = reactive({});
-const submitting = ref(false);
+const hideTimer = ref(null);
+function hideToast() {
+  if (toast.value) toast.value.show = false;
+  window.clearTimeout(hideTimer.value);
+}
 
-watch(
-  () => props.product,
-  (p) => {
-    if (!p) return;
-    Object.assign(form, {
-      masp: p.masp,
-      giatran: p.giacaonhat,
-      giakhoidiem: p.giathapnhat,
-      buocgia: "",
-      tiencoc: "",
-      thoigianbd: "",
-      thoigiankt: "",
-      thoigianbddk: "",
-      thoigianktdk: "",
-    });
-    Object.keys(errors).forEach((k) => (errors[k] = ""));
-  },
-  { immediate: true }
-);
+function onNumberInput(field, e) {
+  let val = e.target.value.replace(/[^\d]/g, ""); // Chỉ giữ số
+  form[field] = val ? Number(val) : "";
+  formattedValues[field] = val ? new Intl.NumberFormat("vi-VN").format(Number(val)) : "";
+}
 
 const validateNumber = (field) => {
-  const raw = form[field] || "";
-  const val = raw.replace(/[^0-9]/g, "");
-  if (raw !== val) form[field] = val;
-  if (!val) errors[field] = "Vui lòng nhập số.";
-  else if (+val < 0) errors[field] = "Phải ≥ 0.";
-  else errors[field] = "";
+  const val = form[field];
+  if (!val && val !== 0) {
+    errors[field] = "Vui lòng nhập số.";
+    return;
+  }
+  if (field === "tiencoc" && +val < 10000) {
+    errors[field] = "Tiền cọc phải ≥ 10.000.";
+  } else if (+val < 0) {
+    errors[field] = "Phải ≥ 0.";
+  } else {
+    errors[field] = "";
+  }
 };
 
 const validateTimes = () => {
@@ -277,18 +269,19 @@ const validateTimes = () => {
   if (!form.thoigianbddk) errors.thoigianbddk = "Chưa chọn thời gian bắt đầu đăng ký.";
   if (!form.thoigianktdk) errors.thoigianktdk = "Chưa chọn thời gian kết thúc đăng ký.";
 
-  if (form.thoigianbd && startAuction < now) errors.thoigianbd = "Bắt đầu phiên phải ở tương lai.";
-  if (form.thoigiankt && endAuction <= startAuction) errors.thoigiankt = "Kết thúc phiên > bắt đầu.";
-  if (form.thoigianbddk && startReg < now) errors.thoigianbddk = "Bắt đầu đăng ký phải ở tương lai.";
-  if (form.thoigianbddk && form.thoigianbd && startReg >= startAuction) errors.thoigianbddk = "Bắt đầu đăng ký < bắt đầu phiên.";
-  if (form.thoigianktdk && endReg <= startReg) errors.thoigianktdk = "Kết thúc đăng ký > bắt đầu đăng ký.";
-  if (form.thoigianktdk && form.thoigianbd && endReg >= startAuction) errors.thoigianktdk = "Kết thúc đăng ký < bắt đầu phiên.";
+  if (form.thoigianbd && startAuction < now)
+    errors.thoigianbd = "Bắt đầu phiên phải ở tương lai.";
+  if (form.thoigiankt && endAuction <= startAuction)
+    errors.thoigiankt = "Kết thúc phiên > bắt đầu.";
+  if (form.thoigianbddk && startReg < now)
+    errors.thoigianbddk = "Bắt đầu đăng ký phải ở tương lai.";
+  if (form.thoigianbddk && form.thoigianbd && startReg >= startAuction)
+    errors.thoigianbddk = "Bắt đầu đăng ký < bắt đầu phiên.";
+  if (form.thoigianktdk && endReg <= startReg)
+    errors.thoigianktdk = "Kết thúc đăng ký > bắt đầu đăng ký.";
+  if (form.thoigianktdk && form.thoigianbd && endReg >= startAuction)
+    errors.thoigianktdk = "Kết thúc đăng ký < bắt đầu phiên.";
 };
-
-watch(
-  () => [form.thoigianbd, form.thoigiankt, form.thoigianbddk, form.thoigianktdk],
-  () => validateTimes()
-);
 
 const formatDateTime = (val) => {
   if (!val) return "";
@@ -297,7 +290,6 @@ const formatDateTime = (val) => {
   return utc.toISOString().slice(0, 19).replace("T", " ");
 };
 
-/* ---- Helper: lấy message lỗi đúng chuẩn BE (GlobalExceptionHandler) ---- */
 function extractErrorMessage(err) {
   if (err?.response?.data?.message) return err.response.data.message;
   if (typeof err?.response?.data === "string") return err.response.data;
@@ -310,7 +302,8 @@ const save = async () => {
 
   fields.forEach(({ key }) => validateNumber(key));
   validateTimes();
-  if (Object.values(errors).some((e) => e)) return showToast("Kiểm tra lại dữ liệu.", "error");
+  if (Object.values(errors).some((e) => e))
+    return showToast("Kiểm tra lại dữ liệu.", "error");
 
   submitting.value = true;
   try {
@@ -320,8 +313,7 @@ const save = async () => {
       thoigiankt: formatDateTime(form.thoigiankt),
       thoigianbddk: formatDateTime(form.thoigianbddk),
       thoigianktdk: formatDateTime(form.thoigianktdk),
-      giakhoidiem: form.giakhoidiem,
-      giatran: form.giatran,
+      giakhoidiem: form.giamongdoi, // Sử dụng giá mong đợi làm khởi điểm
       buocgia: form.buocgia,
       tiencoc: form.tiencoc,
     };
@@ -352,11 +344,39 @@ const close = () => emit("close");
 // Format giá tiền VND
 const formatPrice = (price) => {
   if (price == null || price === undefined) return "N/A";
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    price
+  );
 };
+
+// Watch
+watch(
+  () => props.product,
+  (p) => {
+    if (!p) return;
+    Object.assign(form, {
+      masp: p.masp,
+      giamongdoi: p.giamongdoi,
+      buocgia: "",
+      tiencoc: "",
+      thoigianbd: "",
+      thoigiankt: "",
+      thoigianbddk: "",
+      thoigianktdk: "",
+    });
+    Object.assign(formattedValues, { buocgia: "", tiencoc: "" });
+    Object.keys(errors).forEach((k) => (errors[k] = ""));
+  },
+  { immediate: true }
+);
+
+watch(
+  () => [form.thoigianbd, form.thoigiankt, form.thoigianbddk, form.thoigianktdk],
+  () => validateTimes()
+);
 </script>
 
 <style scoped>
-@import "@/assets/styles/auth.css";
+@import "@/assets/styles/userinfo.css";
 @import "@/assets/styles/toast.css";
 </style>

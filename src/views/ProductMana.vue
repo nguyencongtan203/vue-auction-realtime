@@ -18,7 +18,7 @@
         @click="activeTab = 'products'"
         class="tab-btn group"
       >
-       <span>Sản phẩm đã đăng ký</span> 
+        <span>Sản phẩm đã đăng ký</span>
       </button>
       <button
         :class="{ 'tab-btn--active': activeTab === 'auctions' }"
@@ -75,10 +75,6 @@
                 </td>
                 <td>
                   <div class="flex flex-wrap gap-2 justify-center">
-                    <button class="soft-btn neutral" @click="toggleDetails(p.masp)">
-                      Chi tiết
-                    </button>
-
                     <template v-if="p.trangthai !== 'Đã duyệt'">
                       <button class="soft-btn blue" @click="openEdit(p)">
                         Chỉnh sửa
@@ -89,6 +85,14 @@
                         Tạo phiên
                       </button>
                     </template>
+                    <button class="soft-btn neutral" @click="toggleDetails(p.masp)">
+                      Chi tiết
+                    </button>
+
+                    <!-- Button Xóa luôn luôn có -->
+                    <button class="soft-btn red" @click="confirmDelete(p.masp)">
+                      Xóa
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -125,8 +129,8 @@
                           <div class="panel-value">{{ p.danhMuc?.tendm || "N/A" }}</div>
                         </div>
                         <div class="panel-col">
-                          <div class="panel-label">Giá ước tính</div>
-                          <div class="panel-value">{{ formatPrice(p.giathapnhat) }} - {{ formatPrice(p.giacaonhat) }}</div>
+                          <div class="panel-label">Giá mong đợi</div>
+                          <div class="panel-value">{{ formatPrice(p.giamongdoi) }}</div>
                         </div>
                       </div>
                     </div>
@@ -216,19 +220,52 @@
       @close="showAuctionPopup = false"
       @created="handleAuctionCreated"
     />
+    <!-- Popup xác nhận xóa -->
+    <PopupSubmit
+      :visible="showConfirmPopup"
+      :message="confirmMessage"
+      @close="showConfirmPopup = false"
+      @submit="handleConfirmDelete"
+    />
+
+    <!-- Toast chỉ dành cho lỗi/ thông báo từ server -->
+    <transition name="slide-fade">
+      <div v-if="toast.show" class="fixed top-5 right-5 z-50">
+        <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow">
+          <div class="flex items-center justify-center w-12" :class="toastMeta.barBg">
+            <svg class="w-6 h-6 text-white fill-current" viewBox="0 0 40 40">
+              <template v-for="(d, i) in toastMeta.iconPaths" :key="i">
+                <path :d="d" />
+              </template>
+            </svg>
+          </div>
+          <div class="px-4 py-2 -mx-3">
+            <div class="mx-3">
+              <span class="font-semibold" :class="toastMeta.titleColor">{{
+                toastMeta.title
+              }}</span>
+              <p class="text-sm text-gray-600">{{ toast.message }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated, onUnmounted, computed, watch } from "vue";
+import { ref, reactive, onMounted, onActivated, onUnmounted, computed, watch } from "vue";
 import axios from "axios";
 import Cookies from "js-cookie";
 import UpdateProduct from "@/components/UpdateProduct.vue";
 import CreateAuction from "@/components/CreateAuction.vue";
+import PopupSubmit from "@/components/PopupSubmit.vue";
 
 defineOptions({ name: "ProductManagement" });
 
 const API = "http://localhost:8082/api";
+
+// Reactive state
 const activeTab = ref("products");
 const products = ref([]);
 const auctions = ref([]);
@@ -236,10 +273,71 @@ const openedDetails = ref(null);
 
 const showUpdatePopup = ref(false);
 const showAuctionPopup = ref(false);
-
 const editedProduct = ref(null);
 const auctionProduct = ref(null);
 
+const showConfirmPopup = ref(false);
+const confirmMessage = ref("");
+const productToDelete = ref("");
+
+const productPage = ref(1);
+const productPageSize = ref(8);
+const productTotalPages = ref(1);
+
+const toast = reactive({ show: false, message: "", type: "success" });
+
+// Computed
+const filteredProducts = computed(() =>
+  products.value.filter((p) => ["Đã duyệt", "Chờ duyệt", "Đã hủy"].includes(p.trangthai))
+);
+
+const toastMeta = computed(() => {
+  const type = String(toast.type || "info").toLowerCase();
+  if (type === "success")
+    return {
+      title: "Thành công!",
+      barBg: "bg-emerald-500",
+      titleColor: "text-emerald-500",
+      iconPaths: [
+        "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z",
+      ],
+    };
+  if (type === "warning")
+    return {
+      title: "Cảnh báo!",
+      barBg: "bg-yellow-400",
+      titleColor: "text-yellow-400",
+      iconPaths: [
+        "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
+      ],
+    };
+  if (type === "error")
+    return {
+      title: "Lỗi!",
+      barBg: "bg-red-500",
+      titleColor: "text-red-500",
+      iconPaths: [
+        "M20 3.36667C10.8167 3.36667 3.3667 10.8167 3.3667 20C3.3667 29.1833 10.8167 36.6333 20 36.6333C29.1834 36.6333 36.6334 29.1833 36.6334 20C36.6334 10.8167 29.1834 3.36667 20 3.36667ZM19.1334 33.3333V22.9H13.3334L21.6667 6.66667V17.1H27.25L19.1334 33.3333Z",
+      ],
+    };
+  return {
+    title: "Thông báo",
+    barBg: "bg-blue-500",
+    titleColor: "text-blue-500",
+    iconPaths: [
+      "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331Z",
+      "M21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
+    ],
+  };
+});
+
+// Watch
+watch(activeTab, (tab) => {
+  if (tab === "products") fetchProducts();
+  else fetchAuctions();
+});
+
+// Functions
 const getImageUrl = (tenanh) => `${API}/imgs/${tenanh}`;
 
 const toggleDetails = (masp) => {
@@ -263,16 +361,9 @@ const handleUpdated = async () => {
 
 const handleAuctionCreated = async () => {
   await fetchAuctions();
+  if (activeTab.value === "products") await fetchProducts();
   showAuctionPopup.value = false;
 };
-
-const filteredProducts = computed(() =>
-  products.value.filter((p) => ["Đã duyệt", "Chờ duyệt", "Đã hủy"].includes(p.trangthai))
-);
-
-const productPage = ref(1);
-const productPageSize = ref(8);
-const productTotalPages = ref(1);
 
 async function fetchProducts() {
   try {
@@ -324,44 +415,15 @@ function goProductsPage(n) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
+
 function prevProductsPage() {
   if (productPage.value > 1) goProductsPage(productPage.value - 1);
 }
+
 function nextProductsPage() {
   if (productPage.value < productTotalPages.value) goProductsPage(productPage.value + 1);
 }
 
-watch(activeTab, (tab) => {
-  if (tab === "products") fetchProducts();
-  else fetchAuctions();
-});
-
-onActivated(() => {
-  if (activeTab.value === "products") fetchProducts();
-  else fetchAuctions();
-});
-
-function onProductsChanged() {
-  productPage.value = 1;
-  fetchProducts();
-}
-function onAuctionsChanged() {
-  fetchAuctions();
-}
-
-onMounted(() => {
-  fetchProducts();
-  fetchAuctions();
-  window.addEventListener("products:changed", onProductsChanged);
-  window.addEventListener("auctions:changed", onAuctionsChanged);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("products:changed", onProductsChanged);
-  window.removeEventListener("auctions:changed", onAuctionsChanged);
-});
-
-// Helper trạng thái → màu
 function statusColor(st) {
   switch (st) {
     case "Đã duyệt":
@@ -375,32 +437,86 @@ function statusColor(st) {
   }
 }
 
-// Format giá tiền VND
 const formatPrice = (price) => {
   if (price == null || price === undefined) return "N/A";
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    price
+  );
 };
+
+function showToast(msg, type = "success") {
+  toast.message = msg;
+  toast.type = type;
+  toast.show = true;
+  setTimeout(() => (toast.show = false), 2500);
+}
+
+const confirmDelete = (masp) => {
+  confirmMessage.value = "Bạn có chắc muốn xóa sản phẩm này?";
+  productToDelete.value = masp;
+  showConfirmPopup.value = true;
+};
+
+const handleConfirmDelete = () => {
+  if (productToDelete.value) {
+    deleteProduct(productToDelete.value);
+    showConfirmPopup.value = false;
+    productToDelete.value = "";
+  }
+};
+
+async function deleteProduct(masp) {
+  try {
+    const token = Cookies.get("jwt_token");
+    if (!token) {
+      showToast("Không tìm thấy token!", "error");
+      return;
+    }
+    const res = await axios.delete(`${API}/products/delete/${masp}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const { code, message } = res.data;
+    if (code === 200) {
+      showToast(message, "success");
+      await fetchProducts();
+    } else {
+      showToast(message, "error");
+    }
+  } catch (err) {
+    console.error("Lỗi khi xóa sản phẩm:", err);
+    showToast("Lỗi mạng hoặc server!", "error");
+  }
+}
+
+function onProductsChanged() {
+  productPage.value = 1;
+  fetchProducts();
+}
+
+function onAuctionsChanged() {
+  fetchAuctions();
+}
+
+// Lifecycle
+onActivated(() => {
+  if (activeTab.value === "products") fetchProducts();
+  else fetchAuctions();
+});
+
+onMounted(() => {
+  fetchProducts();
+  fetchAuctions();
+  window.addEventListener("products:changed", onProductsChanged);
+  window.addEventListener("auctions:changed", onAuctionsChanged);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("products:changed", onProductsChanged);
+  window.removeEventListener("auctions:changed", onAuctionsChanged);
+});
 </script>
 
 <style scoped>
 @import "@/assets/styles/productmana.css";
-@media (max-width: 768px) {
-  .table-shell {
-    overflow-x: auto;
-  }
-  .soft-table {
-    font-size: 0.875rem;
-    min-width: 600px;
-  }
-  .data-row td {
-    padding: 0.5rem;
-  }
-  .details-row .panel-inner {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  .menu {
-    justify-content: center;
-  }
-}
+@import "@/assets/styles/toast.css";
 </style>

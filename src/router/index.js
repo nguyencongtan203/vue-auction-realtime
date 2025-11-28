@@ -20,8 +20,8 @@ const routes = [
   { path: '/product-management', name: 'ProductManagement', component: ProductMana, meta: { requiresAuth: true } },
   { path: '/auction-detail/:id', name: 'AuctionDetail', component: AuctionDetail},
   { path: '/payment-management', name: 'PaymentMana', component: PaymentMana, meta: { requiresAuth: true } },
-  { path: '/verify-success', name: 'VerifySuccess', component: VerifySuccess },
-  { path: '/payment-success', name: 'PaymentSuccess', component: PaymentSuccess },
+  { path: '/verify-success', name: 'VerifySuccess', component: VerifySuccess, meta: { requiresAuth: true } },
+  { path: '/payment-success', name: 'PaymentSuccess', component: PaymentSuccess, meta: { requiresAuth: true } },
   { path: '/registered-auctions', name: 'RegisteredAuctions', component: RegisteredAuctions, meta: { requiresAuth: true } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 

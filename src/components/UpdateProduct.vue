@@ -68,6 +68,21 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <label class="w-40 text-sm font-semibold text-gray-700">Giá mong đợi</label>
+          <div class="flex-1">
+            <input
+              v-model="formattedPrice"
+              type="text"
+              class="input"
+              :class="{ error: errors.giamongdoi }"
+              placeholder="Ví dụ: 10.000"
+              @input="onPriceInput"
+            />
+            <p v-if="errors.giamongdoi" class="error-msg">{{ errors.giamongdoi }}</p>
+          </div>
+        </div>
+
         <div class="form-row flex-col items-start">
           <label class="text-sm font-semibold text-gray-700"
             >Ảnh sản phẩm (tối đa 3 ảnh)</label
@@ -111,9 +126,19 @@
         </div>
 
         <!-- Footer -->
-        <div class="pt-6 flex justify-end gap-3 border-t mt-6">
-          <button type="button" class="btn-cancel" @click="close">Hủy</button>
-          <button type="submit" class="btn-primary max-w-[130px]" :disabled="submitting">
+        <div class="pt-6 flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+            @click="close"
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+            :disabled="submitting"
+          >
             <span v-if="submitting">Đang lưu...</span>
             <span v-else>Lưu</span>
           </button>
@@ -157,25 +182,34 @@ const API = "http://localhost:8082/api";
 const props = defineProps({ visible: Boolean, product: Object });
 const emit = defineEmits(["close", "updated"]);
 
+// Reactive state
 const categories = ref([]);
 const cities = ref([]);
 const imageInput = ref(null);
+const formattedPrice = ref("");
 
 const form = reactive({
   masp: "",
   tensp: "",
   tinhtrangsp: "",
+  giamongdoi: null,
   thanhPho: { matp: "" },
   danhMuc: { madm: "" },
   hinhAnh: [],
 });
 const originalImages = ref([]);
-
-/* Validation errors */
 const errors = reactive({});
-
-/* Toast (server messages only) */
 const toast = reactive({ show: false, message: "", type: "success" });
+const submitting = ref(false);
+
+// Computed
+const catOptions = computed(() =>
+  (categories.value || []).map((c) => ({ value: String(c.madm), label: c.tendm }))
+);
+const cityOptions = computed(() =>
+  (cities.value || []).map((c) => ({ value: String(c.matp), label: c.tentp }))
+);
+
 const toastMeta = computed(() => {
   const type = String(toast.type || "info").toLowerCase();
   if (type === "success")
@@ -215,41 +249,8 @@ const toastMeta = computed(() => {
     ],
   };
 });
-function showToast(msg, type = "success") {
-  toast.message = msg;
-  toast.type = type;
-  toast.show = true;
-  setTimeout(() => (toast.show = false), 2500);
-}
 
-/* Dropdown options */
-const catOptions = computed(() =>
-  (categories.value || []).map((c) => ({ value: String(c.madm), label: c.tendm }))
-);
-const cityOptions = computed(() =>
-  (cities.value || []).map((c) => ({ value: String(c.matp), label: c.tentp }))
-);
-
-/* Init lists */
-onMounted(async () => {
-  try {
-    const [catRes, cityRes] = await Promise.all([
-      axios.get(`${API}/cates/find-all`),
-      axios.get(`${API}/cities/find-all`),
-    ]);
-    categories.value = catRes.data?.code === 200 ? catRes.data.result || [] : [];
-    cities.value = cityRes.data?.code === 200 ? cityRes.data.result || [] : [];
-    if (catRes.data?.code !== 200 && catRes.data?.message)
-      showToast(catRes.data.message, "error");
-    if (cityRes.data?.code !== 200 && cityRes.data?.message)
-      showToast(cityRes.data.message, "error");
-  } catch (err) {
-    showToast("Không thể tải danh mục/thành phố!", "error");
-    console.error(err);
-  }
-});
-
-/* Bind product */
+// Watch
 watch(
   () => props.product,
   (p) => {
@@ -263,28 +264,39 @@ watch(
       masp: p.masp ?? "",
       tensp: p.tensp ?? "",
       tinhtrangsp: p.tinhtrangsp ?? "",
+      giamongdoi: p.giamongdoi || null,
       thanhPho: { matp: p.thanhPho?.matp ? String(p.thanhPho.matp) : "" },
       danhMuc: { madm: p.danhMuc?.madm ? String(p.danhMuc.madm) : "" },
       hinhAnh: initial,
     });
+    formattedPrice.value = form.giamongdoi
+      ? new Intl.NumberFormat("vi-VN").format(form.giamongdoi)
+      : "";
     originalImages.value = initial.map((x) => ({ tenanh: x.tenanh }));
     clearErrors();
   },
   { immediate: true }
 );
 
-/* Helpers */
+// Functions
 function clearErrors() {
   Object.keys(errors).forEach((k) => delete errors[k]);
 }
+
 const getImageUrl = (tenanh) => `${API}/imgs/${tenanh}`;
+
 function extractErrorMessage(err) {
   if (err?.response?.data?.message) return err.response.data.message;
   if (typeof err?.response?.data === "string") return err.response.data;
   return err?.message || "Lỗi kết nối đến máy chủ!";
 }
 
-/* Images */
+function onPriceInput(e) {
+  let val = e.target.value.replace(/[^\d]/g, ""); // Chỉ giữ số
+  form.giamongdoi = val ? Number(val) : null;
+  formattedPrice.value = val ? new Intl.NumberFormat("vi-VN").format(Number(val)) : "";
+}
+
 function onAddImage(e) {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -306,23 +318,23 @@ function onAddImage(e) {
   reader.readAsDataURL(renamedFile);
   e.target.value = "";
 }
+
 function removeImage(i) {
   form.hinhAnh.splice(i, 1);
 }
 
-/* Validation (only set inline errors, no toast) */
 function validate() {
   clearErrors();
   if (!form.thanhPho.matp) errors.matp = "Chọn thành phố.";
   if (!form.danhMuc.madm) errors.madm = "Chọn danh mục.";
   if (!form.tensp?.trim()) errors.tensp = "Nhập tên sản phẩm.";
   if (!form.tinhtrangsp?.trim()) errors.tinhtrangsp = "Nhập tình trạng.";
+  if (!form.giamongdoi || form.giamongdoi < 10000)
+    errors.giamongdoi = "Giá mong đợi phải từ 10.000 trở lên.";
   if (form.hinhAnh.length === 0) errors.hinhAnh = "Cần ít nhất 1 ảnh.";
   return Object.keys(errors).length === 0;
 }
 
-/* Save */
-const submitting = ref(false);
 async function save() {
   if (!validate()) return; // Chỉ inline errors
 
@@ -335,7 +347,7 @@ async function save() {
   submitting.value = true;
   try {
     // Xử lý chuỗi sạch: trim đầu cuối và loại bỏ khoảng trắng thừa
-    const cleanString = (str) => str.trim().replace(/\s+/g, ' ');
+    const cleanString = (str) => str.trim().replace(/\s+/g, " ");
 
     const body = {
       masp: form.masp,
@@ -343,6 +355,7 @@ async function save() {
       matp: form.thanhPho.matp,
       tensp: cleanString(form.tensp),
       tinhtrangsp: cleanString(form.tinhtrangsp),
+      giamongdoi: form.giamongdoi,
     };
     const updateRes = await axios.put(`${API}/products/update`, body, {
       headers: { Authorization: `Bearer ${token}` },
@@ -449,42 +462,35 @@ async function save() {
 function close() {
   emit("close");
 }
+
+function showToast(msg, type = "success") {
+  toast.message = msg;
+  toast.type = type;
+  toast.show = true;
+  setTimeout(() => (toast.show = false), 2500);
+}
+
+// Lifecycle
+onMounted(async () => {
+  try {
+    const [catRes, cityRes] = await Promise.all([
+      axios.get(`${API}/cates/find-all`),
+      axios.get(`${API}/cities/find-all`),
+    ]);
+    categories.value = catRes.data?.code === 200 ? catRes.data.result || [] : [];
+    cities.value = cityRes.data?.code === 200 ? cityRes.data.result || [] : [];
+    if (catRes.data?.code !== 200 && catRes.data?.message)
+      showToast(catRes.data.message, "error");
+    if (cityRes.data?.code !== 200 && cityRes.data?.message)
+      showToast(cityRes.data.message, "error");
+  } catch (err) {
+    showToast("Không thể tải danh mục/thành phố!", "error");
+    console.error(err);
+  }
+});
 </script>
 
 <style scoped>
 @import "@/assets/styles/userinfo.css";
 @import "@/assets/styles/toast.css";
-
-.btn-primary {
-  padding: 10px 18px;
-  border-radius: 12px;
-  background: #2563eb;
-  color: #fff;
-  font-weight: 700;
-  transition: all 0.25s;
-}
-.btn-primary:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-cancel {
-  padding: 10px 18px;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  background: #f8fafc;
-  font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.4px;
-  color: #374151;
-  transition: all 0.25s;
-}
-.btn-cancel:hover {
-  background: #eef3f7;
-}
 </style>

@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen text-slate-800 py-10 px-6 max-w-5xl mx-auto fade-in">
-    <!-- Loading / Error -->
-    <!-- Loading / Error -->
+     <!-- Loading / Error: Hiển thị khi đang tải hoặc có lỗi -->
     <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
       <div class="flex flex-col items-center gap-3">
         <div id="wifi-loader">
@@ -27,16 +26,16 @@
       {{ error }}
     </div>
 
-    <!-- Nội dung -->
+    <!-- Nội dung chính: Khi đã load xong -->
     <div v-else>
-      <!-- Tiêu đề -->
+      <!-- Tiêu đề: Tên sản phẩm -->
       <h1
         class="text-2xl md:text-3xl font-bold text-center text-[#0f6bae] uppercase tracking-wide mb-8"
       >
         {{ auction.sanPham?.tensp }}
       </h1>
 
-      <!-- Bộ đếm ngược -->
+      <!-- Bộ đếm ngược: Hiển thị thời gian đến khi bắt đầu đấu giá -->
       <div class="flex justify-center flex-wrap gap-2 mb-10 items-center">
         <template v-for="(unit, label, index) in countdown" :key="label">
           <div
@@ -55,9 +54,9 @@
         </template>
       </div>
 
-      <!-- Thông tin đấu giá -->
+      <!-- Thông tin đấu giá: Chia làm 2 cột trên md -->
       <div class="grid md:grid-cols-2 gap-10">
-        <!-- Hình ảnh -->
+        <!-- Hình ảnh: Bên trái, có thumbnail nếu nhiều ảnh -->
         <div>
           <img
             :src="mainImage"
@@ -78,7 +77,7 @@
           </div>
         </div>
 
-        <!-- Chi tiết -->
+        <!-- Chi tiết: Bên phải, danh sách thông tin -->
         <div class="space-y-3 text-[15px] leading-relaxed">
           <div
             v-for="item in thongTin"
@@ -121,7 +120,7 @@
       class="fixed inset-0 z-[100] bg-black/90 text-white"
       @click="closeImagePopup"
     >
-      <!-- Top bar -->
+      <!-- Top bar: Thông tin và controls -->
       <div
         class="absolute top-0 left-0 right-0 h-12 px-4 md:px-6 flex items-center justify-between select-none"
         @click.stop
@@ -171,7 +170,7 @@
         </div>
       </div>
 
-      <!-- Stage -->
+      <!-- Stage: Ảnh chính -->
       <div class="h-full w-full flex items-center justify-center px-4 md:px-10">
         <div class="relative h-[80vh] w-full max-w-[96vw]">
           <img
@@ -212,7 +211,7 @@
         </div>
       </div>
 
-      <!-- Thumbnails -->
+      <!-- Thumbnails: Dưới cùng, scroll ngang -->
       <div class="absolute bottom-0 left-0 right-0 bg-black/70" @click.stop>
         <div class="mx-auto max-w-[95vw] px-3 py-3 overflow-x-auto">
           <div class="flex items-center gap-2">
@@ -241,7 +240,7 @@
     </div>
   </transition>
 
-  <!-- Toast (chuẩn hóa giống template trước) -->
+  <!-- Toast: Thông báo -->
   <transition name="slide-fade">
     <div v-if="toast.show" class="fixed top-5 right-5 z-50">
       <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow">
@@ -275,7 +274,7 @@ import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const API = "http://localhost:8082/api/"; // giữ nguyên biến API (có dấu / ở cuối)
+const API = "http://localhost:8082/api/";
 const route = useRoute();
 const router = useRouter();
 
@@ -307,10 +306,6 @@ const thongTin = computed(() => [
   { label: "Thời gian mở đăng ký", value: formatDate(auction.value.thoigianbddk) },
   { label: "Thời gian kết thúc đăng ký", value: formatDate(auction.value.thoigianktdk) },
   { label: "Bước giá", value: formatCurrency(auction.value.buocgia) },
-  {
-    label: "Giá trần",
-    value: auction.value.giatran == null ? "-" : formatCurrency(auction.value.giatran),
-  },
   { label: "Tiền đặt trước", value: formatCurrency(auction.value.tiencoc) },
   {
     label: "Tên chủ tài sản",

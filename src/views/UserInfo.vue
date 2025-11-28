@@ -159,6 +159,7 @@
               option-label="label"
               :disabled="!editing"
               :error="!!errors.matp"
+              :errorMessage="errors.matp"
               placeholder="-- Chưa chọn thành phố --"
             />
             <p v-if="errors.matp" class="error-msg">{{ errors.matp }}</p>
@@ -184,7 +185,13 @@
           <span v-if="saving">Đang lưu...</span>
           <span v-else>Lưu Thay Đổi</span>
         </button>
-        <button v-if="editing" @click="cancelEdit" class="btn-cancel">Hủy</button>
+        <button
+          v-if="editing"
+          @click="cancelEdit"
+          class="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+        >
+          Hủy
+        </button>
       </div>
     </div>
   </div>
@@ -201,6 +208,7 @@ import SoftDropdown from "@/components/SoftDropdown.vue";
 
 const API = "http://localhost:8082/api";
 
+// Reactive state
 const changePasswordPopup = ref(null);
 const user = ref(null);
 const cities = ref([]);
@@ -211,6 +219,7 @@ const originalData = ref(null);
 const errors = ref({});
 const toast = ref({ show: false, message: "", type: "success" });
 
+// Computed
 const toastMeta = computed(() => {
   const type = (toast.value.type || "info").toLowerCase();
   switch (type) {
@@ -263,6 +272,11 @@ const emailVerified = computed(() => {
   return status === "ACTIVE" || status === "ĐÃ XÁC THỰC";
 });
 
+const cityOptions = computed(() =>
+  (cities.value || []).map((tp) => ({ value: String(tp.matp), label: tp.tentp }))
+);
+
+// Functions
 function showToast(message, type = "success") {
   toast.value = { show: true, message, type };
   setTimeout(() => (toast.value.show = false), 3000);
@@ -274,6 +288,7 @@ function enableEdit() {
   originalData.value = JSON.parse(JSON.stringify(user.value));
   errors.value = {};
 }
+
 function cancelEdit() {
   if (originalData.value) {
     user.value = JSON.parse(JSON.stringify(originalData.value));
@@ -400,31 +415,15 @@ async function fetchUserAndCities() {
   }
 }
 
-const cityOptions = computed(() =>
-  (cities.value || []).map((tp) => ({ value: String(tp.matp), label: tp.tentp }))
-);
-
 function openChangePassword() {
   changePasswordPopup.value?.open();
 }
 
+// Lifecycle
 onMounted(fetchUserAndCities);
 </script>
 
 <style scoped>
 @import "@/assets/styles/userinfo.css";
 @import "@/assets/styles/toast.css";
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  .form-row label {
-    width: 100%;
-  }
-  .form-row > div {
-    width: 100%;
-  }
-}
 </style>

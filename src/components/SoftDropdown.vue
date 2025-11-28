@@ -37,9 +37,6 @@
       </svg>
     </div>
 
-    <!-- Inline validation error -->
-    <p v-if="error && errorMessage" class="error-msg mt-1">{{ errorMessage }}</p>
-
     <!-- Menu -->
     <transition name="dropdown-fade">
       <div
@@ -271,6 +268,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
 /* Error state: underline đỏ */
 .dropdown-trigger.error {
   border-bottom-color: #e03131 !important;
+  animation: shake .22s ease-in-out;
 }
 
 /* Menu */
@@ -345,5 +343,26 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
 }
 .dropdown-list::-webkit-scrollbar-thumb:hover {
   background: #b8c3ce;
+}
+
+/* ========= Hiệu ứng ========= */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-3px);
+  }
+
+  50% {
+    transform: translateX(3px);
+  }
+
+  75% {
+    transform: translateX(-2px);
+  }
 }
 </style>

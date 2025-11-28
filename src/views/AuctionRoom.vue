@@ -45,7 +45,7 @@
             />
           </svg>
         </button>
-
+        <!-- Dropdown danh mục -->
         <transition name="fade">
           <div
             v-if="showCate"
@@ -96,7 +96,7 @@
             />
           </svg>
         </button>
-
+        <!-- Dropdown khu vực -->
         <transition name="fade">
           <ul
             v-if="showRegion"
@@ -145,7 +145,7 @@
             />
           </svg>
         </button>
-
+        <!-- Dropdown mức giá -->
         <transition name="fade">
           <ul
             v-if="showPrice"
@@ -198,7 +198,7 @@
             />
           </svg>
         </button>
-
+        <!-- Dropdown thời gian -->
         <transition name="fade">
           <div
             v-if="showDate"
@@ -300,6 +300,7 @@
             class="card relative rounded-[22px] border border-slate-200 bg-white overflow-hidden shadow-sm flex flex-col cursor-pointer fade-in"
             @click.prevent="goAuctionDetail(it.id)"
           >
+            <!-- Ảnh và timer -->
             <div class="p-4">
               <div
                 class="h-60 rounded-xl bg-white ring-1 ring-slate-100 flex items-center justify-center overflow-hidden relative image-wrap"
@@ -350,13 +351,13 @@
                 </div>
               </div>
             </div>
-
+            <!-- Tiêu đề -->
             <div class="px-5">
               <h3 class="font-bold text-[19px] leading-snug clamp-2 min-h-[44px]">
                 {{ it.title }}
               </h3>
             </div>
-
+            <!-- Meta info và nút -->
             <div class="px-5 pt-3 pb-5 flex-1 flex flex-col">
               <div class="meta-grid-2">
                 <div class="label">Giá khởi điểm:</div>
@@ -377,7 +378,7 @@
     </div>
   </div>
 
-  <!-- PHÂN TRANG SERVER -->
+  <!-- Phân trang -->
   <div style="background-image: linear-gradient(rgb(255, 255, 255), rgb(239, 247, 255))">
     <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
       <div
@@ -409,7 +410,7 @@ import { useRouter } from "vue-router";
 
 const API = "http://localhost:8082/api";
 
-/* ====== State chính ====== */
+// Reactive state: State chính của component
 const search = ref("");
 const categories = ref([]);
 const cities = ref([]);
@@ -433,193 +434,25 @@ const dateDropdown = ref(null);
 const priceRange = reactive({ min: null, max: null });
 const dateRange = reactive({ from: "", to: "" });
 
-const page = ref(1); // 1-based cho UI
+const page = ref(1);
 const pageSize = ref(12);
-const totalPages = ref(1); // từ server Page.totalPages
+const totalPages = ref(1);
 
 const now = ref(Date.now());
-const pageContent = ref([]); // dữ liệu trang hiện/ chỉ content từ server
+const pageContent = ref([]);
 const router = useRouter();
 const statusFilter = ref("upcoming"); // upcoming | ongoing | ended
 const imgState = reactive({});
 const loading = ref(true);
 const error = ref(null);
 
-/* ====== Helpers ====== */
-const getImageUrl = (tenanh) => `${API}/imgs/${tenanh}`;
-const formatVND = (n) =>
-  `${new Intl.NumberFormat("vi-VN").format(Math.round(n || 0))} VNĐ`;
-const viTime = (ts) => {
-  const d = new Date(ts);
-  return `${d.toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })} - ${d.toLocaleDateString("vi-VN")}`;
-};
-const parseDateTime = (str) => new Date(str).getTime() || Date.now();
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-};
-
-function extractErrorMessage(err) {
-  if (err?.response?.data?.message) return err.response.data.message;
-  if (typeof err?.response?.data === "string") return err.response.data;
-  return err?.message || "Lỗi kết nối đến máy chủ!";
-}
-
-/* ====== Map statusFilter -> enums gửi lên BE ====== */
-function buildStatusEnums() {
-  switch (statusFilter.value) {
-    case "upcoming":
-      return ["NOT_STARTED"];
-    case "ongoing":
-      return ["IN_PROGRESS"];
-    case "ended":
-      return ["SUCCESS"];
-    default:
-      return ["NOT_STARTED", "IN_PROGRESS", "SUCCESS"];
-  }
-}
-
-/* ====== Countdown ====== */
-const shortCountdown = (startAt, endAt) => {
-  const nowVal = now.value;
-  const pad = (x) => String(x).padStart(2, "0");
-  if (nowVal < startAt) {
-    const diff = startAt - nowVal;
-    const totalS = Math.floor(diff / 1000);
-    const h = Math.floor(totalS / 3600);
-    const m = Math.floor((totalS % 3600) / 60);
-    const s = totalS % 60;
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
-  }
-  if (nowVal >= startAt && nowVal < endAt) {
-    const diff = endAt - nowVal;
-    const totalS = Math.floor(diff / 1000);
-    const h = Math.floor(totalS / 3600);
-    const m = Math.floor((totalS % 3600) / 60);
-    const s = totalS % 60;
-    return `Đang diễn ra ${pad(h)}:${pad(m)}:${pad(s)}`;
-  }
-  return "Đã kết thúc";
-};
-
-/* ====== Fetch dữ liệu từ server với filter ====== */
-async function fetchAuctions() {
-  try {
-    loading.value = true;
-    error.value = null;
-
-    const params = new URLSearchParams();
-    // Statuses
-    const statuses = buildStatusEnums();
-    statuses.forEach((s) => params.append("statuses", s));
-    // Keyword
-    if (search.value.trim()) params.append("keyword", search.value.trim());
-    // Cate
-    if (selectedCate.value) params.append("cateId", selectedCate.value.madm);
-    // Region
-    if (selectedRegion.value) params.append("regionId", selectedRegion.value.matp);
-    // Price
-    if (priceRange.min) params.append("minPrice", priceRange.min);
-    if (priceRange.max) params.append("maxPrice", priceRange.max);
-    // Date
-    if (dateRange.from)
-      params.append("startDateFrom", new Date(dateRange.from).getTime());
-    if (dateRange.to)
-      params.append(
-        "startDateTo",
-        new Date(new Date(dateRange.to).setHours(23, 59, 59, 999)).getTime()
-      );
-    // Page
-    params.append("page", page.value - 1); // BE 0-based
-    params.append("size", pageSize.value);
-    params.append("sort", "thoigianbd,asc");
-
-    const url = `${API}/auctions/find-filtered?${params.toString()}`;
-    const res = await axios.get(url);
-
-    if (res.data?.code === 200 && res.data.result) {
-      const pg = res.data.result;
-      totalPages.value = pg.totalPages || 1;
-
-      pageContent.value = (pg.content || []).map((it) => {
-        const src = it.sanPham?.hinhAnh?.[0]?.tenanh
-          ? getImageUrl(it.sanPham.hinhAnh[0].tenanh)
-          : null;
-        const item = {
-          id: it.maphiendg,
-          title: it.sanPham?.tensp || "Không rõ tên",
-          image: src,
-          startAt: parseDateTime(it.thoigianbd),
-          endAt: parseDateTime(it.thoigiankt),
-          priceStartVnd: it.giakhoidiem || 0,
-          cateId: it.sanPham?.danhMuc?.madm ?? it.sanPham?.madm ?? null,
-          region: it.sanPham?.thanhPho?.matp ?? null,
-        };
-        imgState[item.id] = src ? "loading" : "error";
-        return item;
-      });
-    } else {
-      pageContent.value = [];
-      totalPages.value = 1;
-      error.value = res.data?.message || null;
-    }
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("Lỗi tải phiên:", err);
-    error.value = extractErrorMessage(err) || "Không thể tải danh sách phiên đấu giá.";
-  } finally {
-    loading.value = false;
-  }
-}
-
-/* ====== Categories & Cities ====== */
-async function fetchCategories() {
-  try {
-    const res = await axios.get(`${API}/cates/find-all`);
-    if (res.data?.code === 200) categories.value = res.data.result || [];
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("Lỗi tải danh mục:", err);
-  }
-}
-async function fetchCities() {
-  try {
-    const res = await axios.get(`${API}/cities/find-all`);
-    if (res.data?.code === 200) cities.value = res.data.result || [];
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("Lỗi tải tỉnh/thành:", err);
-  }
-}
-
-/* ====== Lọc thêm (vì server đã filter, chỉ giữ để tương thích) ====== */
+// Computed: Các giá trị tính toán dựa trên state
 const filteredPageContent = computed(() => {
-  // Vì server đã filter, không cần filter client nữa
   return pageContent.value;
 });
 
-/* ====== Phân trang UI (server đã phân trang, chỉ hiển thị số trang) ====== */
 const canPrev = computed(() => page.value > 1);
 const canNext = computed(() => page.value < totalPages.value);
-function goTo(n) {
-  const safe = Math.min(Math.max(1, n), totalPages.value);
-  if (safe !== page.value) {
-    page.value = safe;
-    fetchAuctions();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-}
-function prevPage() {
-  if (canPrev.value) goTo(page.value - 1);
-}
-function nextPage() {
-  if (canNext.value) goTo(page.value + 1);
-}
 const numericPages = computed(() => {
   const total = totalPages.value;
   const p = page.value;
@@ -632,46 +465,6 @@ const numericPages = computed(() => {
   }
   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 });
-
-/* ====== Dropdown toggles ====== */
-const toggleCate = () => (showCate.value = !showCate.value);
-const toggleRegion = () => (showRegion.value = !showRegion.value);
-const togglePrice = () => (showPrice.value = !showPrice.value);
-const toggleDate = () => (showDate.value = !showDate.value);
-
-const selectCate = (cate) => {
-  selectedCate.value = cate;
-  showCate.value = false;
-  resetToFirstPage();
-};
-const selectRegion = (val) => {
-  selectedRegion.value = val;
-  showRegion.value = false;
-  resetToFirstPage();
-};
-const setPrice = (min, max) => {
-  priceRange.min = min;
-  priceRange.max = max;
-  showPrice.value = false;
-  resetToFirstPage();
-};
-const applyDateFilter = () => {
-  showDate.value = false;
-  resetToFirstPage();
-  fetchAuctions();
-};
-
-function changeStatusFilter(val) {
-  if (statusFilter.value !== val) {
-    statusFilter.value = val;
-    resetToFirstPage();
-    fetchAuctions();
-  }
-}
-
-function resetToFirstPage() {
-  page.value = 1;
-}
 
 const regionLabel = computed(() => selectedRegion.value?.tentp || "");
 const priceLabel = computed(() => {
@@ -690,48 +483,7 @@ const dateLabel = computed(() => {
   return "";
 });
 
-/* ====== Click ngoài để đóng dropdown ====== */
-const handleClickOutside = (event) => {
-  const path = event.composedPath ? event.composedPath() : [];
-  if (
-    showCate.value &&
-    !path.includes(cateBtn.value) &&
-    !path.includes(cateDropdown.value)
-  )
-    showCate.value = false;
-  if (
-    showRegion.value &&
-    !path.includes(regionBtn.value) &&
-    !path.includes(regionDropdown.value)
-  )
-    showRegion.value = false;
-  if (
-    showPrice.value &&
-    !path.includes(priceBtn.value) &&
-    !path.includes(priceDropdown.value)
-  )
-    showPrice.value = false;
-  if (
-    showDate.value &&
-    !path.includes(dateBtn.value) &&
-    !path.includes(dateDropdown.value)
-  )
-    showDate.value = false;
-};
-
-/* ====== Ảnh ====== */
-function onImgLoad(id) {
-  imgState[id] = "loaded";
-}
-function onImgError(id) {
-  imgState[id] = "error";
-}
-
-function goAuctionDetail(id) {
-  router.push({ name: "AuctionDetail", params: { id } });
-}
-
-/* ====== Watch để refetch khi đổi filter ====== */
+// Watch: Theo dõi thay đổi để refetch dữ liệu
 const searchTimeout = ref(null);
 watch(search, () => {
   if (searchTimeout.value) clearTimeout(searchTimeout.value);
@@ -769,7 +521,247 @@ watch(statusFilter, () => {
   fetchAuctions();
 });
 
-/* ====== Lifecycle ====== */
+// Functions
+// Helpers
+const getImageUrl = (tenanh) => `${API}/imgs/${tenanh}`;
+const formatVND = (n) =>
+  `${new Intl.NumberFormat("vi-VN").format(Math.round(n || 0))} VNĐ`;
+const viTime = (ts) => {
+  const d = new Date(ts);
+  return `${d.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })} - ${d.toLocaleDateString("vi-VN")}`;
+};
+const parseDateTime = (str) => new Date(str).getTime() || Date.now();
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+};
+
+function extractErrorMessage(err) {
+  if (err?.response?.data?.message) return err.response.data.message;
+  if (typeof err?.response?.data === "string") return err.response.data;
+  return err?.message || "Lỗi kết nối đến máy chủ!";
+}
+
+// Map statusFilter
+function buildStatusEnums() {
+  switch (statusFilter.value) {
+    case "upcoming":
+      return ["NOT_STARTED"];
+    case "ongoing":
+      return ["IN_PROGRESS"];
+    case "ended":
+      return ["SUCCESS"];
+    default:
+      return ["NOT_STARTED", "IN_PROGRESS", "SUCCESS"];
+  }
+}
+
+// Countdown
+const shortCountdown = (startAt, endAt) => {
+  const nowVal = now.value;
+  const pad = (x) => String(x).padStart(2, "0");
+  if (nowVal < startAt) {
+    const diff = startAt - nowVal;
+    const totalS = Math.floor(diff / 1000);
+    const h = Math.floor(totalS / 3600);
+    const m = Math.floor((totalS % 3600) / 60);
+    const s = totalS % 60;
+    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+  if (nowVal >= startAt && nowVal < endAt) {
+    const diff = endAt - nowVal;
+    const totalS = Math.floor(diff / 1000);
+    const h = Math.floor(totalS / 3600);
+    const m = Math.floor((totalS % 3600) / 60);
+    const s = totalS % 60;
+    return `Đang diễn ra ${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+  return "Đã kết thúc";
+};
+
+// Fetch dữ liệu từ server với filter
+async function fetchAuctions() {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    const params = new URLSearchParams();
+    const statuses = buildStatusEnums();
+    statuses.forEach((s) => params.append("statuses", s));
+    if (search.value.trim()) params.append("keyword", search.value.trim());
+    if (selectedCate.value) params.append("cateId", selectedCate.value.madm);
+    if (selectedRegion.value) params.append("regionId", selectedRegion.value.matp);
+    if (priceRange.min) params.append("minPrice", priceRange.min);
+    if (priceRange.max) params.append("maxPrice", priceRange.max);
+    if (dateRange.from)
+      params.append("startDateFrom", new Date(dateRange.from).getTime());
+    if (dateRange.to)
+      params.append(
+        "startDateTo",
+        new Date(new Date(dateRange.to).setHours(23, 59, 59, 999)).getTime()
+      );
+    params.append("page", page.value - 1); // BE 0-based
+    params.append("size", pageSize.value);
+    params.append("sort", "thoigianbd,asc");
+
+    const url = `${API}/auctions/find-filtered?${params.toString()}`;
+    const res = await axios.get(url);
+
+    if (res.data?.code === 200 && res.data.result) {
+      const pg = res.data.result;
+      totalPages.value = pg.totalPages || 1;
+
+      pageContent.value = (pg.content || []).map((it) => {
+        const src = it.sanPham?.hinhAnh?.[0]?.tenanh
+          ? getImageUrl(it.sanPham.hinhAnh[0].tenanh)
+          : null;
+        const item = {
+          id: it.maphiendg,
+          title: it.sanPham?.tensp || "Không rõ tên",
+          image: src,
+          startAt: parseDateTime(it.thoigianbd),
+          endAt: parseDateTime(it.thoigiankt),
+          priceStartVnd: it.giakhoidiem || 0,
+          cateId: it.sanPham?.danhMuc?.madm ?? it.sanPham?.madm ?? null,
+          region: it.sanPham?.thanhPho?.matp ?? null,
+        };
+        imgState[item.id] = src ? "loading" : "error";
+        return item;
+      });
+    } else {
+      pageContent.value = [];
+      totalPages.value = 1;
+      error.value = res.data?.message || null;
+    }
+  } catch (err) {
+    error.value = extractErrorMessage(err) || "Không thể tải danh sách phiên đấu giá.";
+  } finally {
+    loading.value = false;
+  }
+}
+
+// danh mục và tỉnh/thành
+async function fetchCategories() {
+  try {
+    const res = await axios.get(`${API}/cates/find-all`);
+    if (res.data?.code === 200) categories.value = res.data.result || [];
+  } catch (err) {
+    console.error("Lỗi tải danh mục:", err);
+  }
+}
+async function fetchCities() {
+  try {
+    const res = await axios.get(`${API}/cities/find-all`);
+    if (res.data?.code === 200) cities.value = res.data.result || [];
+  } catch (err) {
+    console.error("Lỗi tải tỉnh/thành:", err);
+  }
+}
+
+// Phân trang
+function goTo(n) {
+  const safe = Math.min(Math.max(1, n), totalPages.value);
+  if (safe !== page.value) {
+    page.value = safe;
+    fetchAuctions();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+function prevPage() {
+  if (canPrev.value) goTo(page.value - 1);
+}
+function nextPage() {
+  if (canNext.value) goTo(page.value + 1);
+}
+
+// Dropdown toggles: Mở/đóng dropdown
+const toggleCate = () => (showCate.value = !showCate.value);
+const toggleRegion = () => (showRegion.value = !showRegion.value);
+const togglePrice = () => (showPrice.value = !showPrice.value);
+const toggleDate = () => (showDate.value = !showDate.value);
+
+// Select filter: Chọn giá trị lọc và reset trang
+const selectCate = (cate) => {
+  selectedCate.value = cate;
+  showCate.value = false;
+  resetToFirstPage();
+};
+const selectRegion = (val) => {
+  selectedRegion.value = val;
+  showRegion.value = false;
+  resetToFirstPage();
+};
+const setPrice = (min, max) => {
+  priceRange.min = min;
+  priceRange.max = max;
+  showPrice.value = false;
+  resetToFirstPage();
+};
+const applyDateFilter = () => {
+  showDate.value = false;
+  resetToFirstPage();
+  fetchAuctions();
+};
+
+function changeStatusFilter(val) {
+  if (statusFilter.value !== val) {
+    statusFilter.value = val;
+    resetToFirstPage();
+    fetchAuctions();
+  }
+}
+
+function resetToFirstPage() {
+  page.value = 1;
+}
+
+// Click ngoài để đóng dropdown
+const handleClickOutside = (event) => {
+  const path = event.composedPath ? event.composedPath() : [];
+  if (
+    showCate.value &&
+    !path.includes(cateBtn.value) &&
+    !path.includes(cateDropdown.value)
+  )
+    showCate.value = false;
+  if (
+    showRegion.value &&
+    !path.includes(regionBtn.value) &&
+    !path.includes(regionDropdown.value)
+  )
+    showRegion.value = false;
+  if (
+    showPrice.value &&
+    !path.includes(priceBtn.value) &&
+    !path.includes(priceDropdown.value)
+  )
+    showPrice.value = false;
+  if (
+    showDate.value &&
+    !path.includes(dateBtn.value) &&
+    !path.includes(dateDropdown.value)
+  )
+    showDate.value = false;
+};
+
+// Ảnh: Xử lý load/error ảnh
+function onImgLoad(id) {
+  imgState[id] = "loaded";
+}
+function onImgError(id) {
+  imgState[id] = "error";
+}
+
+function goAuctionDetail(id) {
+  router.push({ name: "AuctionDetail", params: { id } });
+}
+
+// Lifecycle
 let timer = null;
 onMounted(() => {
   fetchAuctions();

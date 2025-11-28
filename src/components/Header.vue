@@ -1,12 +1,18 @@
 <!-- Header.vue -->
 <template>
   <!-- Header / Navbar -->
-  <header style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;" class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100">
+  <header
+    style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px"
+    class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100"
+  >
     <div
       class="max-w-[1200px] mx-auto px-4 lg:px-6 flex items-center justify-between h-16"
     >
       <!-- Logo -->
-      <div @click="goHome" class="flex items-center gap-3 cursor-pointer">
+      <div
+        @click="goHome"
+        class="flex items-center gap-3 cursor-pointer btn-flash bg-transparent border-0 shadow-none"
+      >
         <img src="/logo.png" alt="Logo" class="h-6 w-auto object-contain" />
       </div>
 
@@ -101,10 +107,93 @@
           ></span>
         </a>
       </nav>
-
       <!-- User section desktop -->
       <div class="hidden lg:flex items-center gap-3">
         <template v-if="user">
+          <!-- Icon chuông thông báo -->
+          <div class="relative">
+            <button
+              @click="toggleNotifications"
+              class="relative inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-slate-50 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6 text-slate-700"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15 17h5l-5-5V9a6 6 0 10-12 0v3l-5 5h5m0 0v1a3 3 0 006 0v-1m-6 0h6"
+                />
+              </svg>
+              <!-- Badge số thông báo chưa đọc -->
+              <span
+                v-if="unreadCount > 0"
+                class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full"
+              >
+                {{ unreadCount > 99 ? "99+" : unreadCount }}
+              </span>
+            </button>
+
+            <!-- Dropdown thông báo -->
+            <div
+              v-if="showNotifications"
+              class="absolute right-0 top-full w-80 bg-white border border-slate-200 shadow-xl rounded-xl z-50 mt-2"
+            >
+              <div class="p-4 border-b border-slate-200">
+                <h3 class="text-sm font-semibold text-slate-900">Thông báo</h3>
+              </div>
+              <div class="max-h-64 overflow-y-auto">
+                <div
+                  v-if="notifications.length === 0"
+                  class="p-4 text-center text-slate-500 text-sm"
+                >
+                  Không có thông báo mới
+                </div>
+                <div v-else>
+                  <div
+                    v-for="notif in notifications.slice(0, 10)"
+                    :key="notif.matb"
+                    class="p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                    @click="markAsRead(notif.matb)"
+                  >
+                    <div class="flex items-start gap-3">
+                      <div class="flex-shrink-0">
+                        <div
+                          class="w-2 h-2 bg-blue-500 rounded-full"
+                          v-if="notif.trangthai !== 'VIEWED'"
+                        ></div>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-900 truncate">
+                          {{ notif.tieude }}
+                        </p>
+                        <p class="text-sm text-slate-600 mt-1">{{ notif.noidung }}</p>
+                        <p class="text-xs text-slate-500 mt-1">
+                          {{ formatDate(notif.thoigian) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                v-if="notifications.length > 10"
+                class="p-4 border-t border-slate-200 text-center"
+              >
+                <a
+                  href="#"
+                  class="text-sm text-blue-600 hover:text-blue-800"
+                  @click.prevent="goToAllNotifications"
+                  >Xem tất cả</a
+                >
+              </div>
+            </div>
+          </div>
           <!-- Dropdown tài khoản -->
           <div class="relative group">
             <button
@@ -265,18 +354,61 @@
           <div v-else class="text-xs text-slate-500 px-2 py-1">Đang tải danh mục…</div>
         </div>
 
-        <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700" @click.prevent="goAuctionRoom">Phòng đấu giá</a>
-        <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700">Kiến thức</a>
-        <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700">Tin tức</a>
+        <a
+          href="#"
+          class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+          @click.prevent="goAuctionRoom"
+          >Phòng đấu giá</a
+        >
+        <a
+          href="#"
+          class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+          >Kiến thức</a
+        >
+        <a
+          href="#"
+          class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+          >Tin tức</a
+        >
 
         <!-- Tài khoản -->
         <template v-if="user">
-          <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700" @click.prevent="goUserInfo">Thông tin cá nhân</a>
-          <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700" @click.prevent="goRegisterProduct">Đăng ký tài sản</a>
-          <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700" @click.prevent="goProductManagement">Quản lý tài sản</a>
-          <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700" @click.prevent="goRegisteredAuctions">Phiên đấu đã đăng ký</a>
-          <a href="#" class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700" @click.prevent="goPaymentManagement">Thanh toán</a>
-          <button class="block w-full text-left py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-red-700" @click="logout">Đăng xuất</button>
+          <a
+            href="#"
+            class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+            @click.prevent="goUserInfo"
+            >Thông tin cá nhân</a
+          >
+          <a
+            href="#"
+            class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+            @click.prevent="goRegisterProduct"
+            >Đăng ký tài sản</a
+          >
+          <a
+            href="#"
+            class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+            @click.prevent="goProductManagement"
+            >Quản lý tài sản</a
+          >
+          <a
+            href="#"
+            class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+            @click.prevent="goRegisteredAuctions"
+            >Phiên đấu đã đăng ký</a
+          >
+          <a
+            href="#"
+            class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
+            @click.prevent="goPaymentManagement"
+            >Thanh toán</a
+          >
+          <button
+            class="block w-full text-left py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-red-700"
+            @click="logout"
+          >
+            Đăng xuất
+          </button>
         </template>
         <template v-else>
           <a href="#" class="block py-2" @click.prevent="openLogin">Đăng nhập</a>
@@ -316,10 +448,10 @@
 <script setup>
 import { ref, computed, watch, onMounted, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import axios from 'axios';
+import axios from "axios";
 import { useUserStore } from "../stores/userStore";
 import Cookies from "js-cookie";
-
+import { useAuctionNotificationStore } from "../stores/useAuctionNotificationStore";
 const API = "http://localhost:8082/api";
 const router = useRouter();
 const route = useRoute();
@@ -382,6 +514,35 @@ const showToast = (message, type = "success") => {
   toast.value = { show: true, message, type };
   setTimeout(() => (toast.value.show = false), 3000);
 };
+
+// Notifications
+const auctionNotificationStore = useAuctionNotificationStore()
+const notifications = computed(() => auctionNotificationStore.notifications)
+const unreadCount = computed(() => auctionNotificationStore.unreadCount)
+const showNotifications = ref(false)
+
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+}
+
+const markAsRead = async (id) => {
+  await auctionNotificationStore.markAsRead(id)
+}
+
+const goToAllNotifications = () => {
+  router.push({ name: "Notifications" })
+  showNotifications.value = false
+}
+
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr)
+  return date.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 // Auth state
 const user = computed(() => userStore.user);
@@ -448,11 +609,16 @@ async function logout() {
   const token = Cookies.get("jwt_token");
   try {
     if (token) {
-      await axios.post(`${API}/auth/logout`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => {
-        showToast("Máy chủ phản hồi không ổn định, vẫn tiến hành đăng xuất.", "warning");
-      });
+      await axios
+        .post(`${API}/auth/logout`, null, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .catch(() => {
+          showToast(
+            "Máy chủ phản hồi không ổn định, vẫn tiến hành đăng xuất.",
+            "warning"
+          );
+        });
     }
   } catch {
     showToast("Có lỗi mạng, vẫn tiếp tục đăng xuất.", "warning");
