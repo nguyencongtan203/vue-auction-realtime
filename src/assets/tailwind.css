@@ -48,3 +48,27 @@ html, body {
     transform: translateY(0);
   }
 }
+
+.fade-out {
+  animation: fadeOut 0.55s ease;
+}
+
+.fade-enter-active {
+  animation: fadeIn 0.55s ease;
+}
+
+.fade-leave-active {
+  animation: fadeOut 0.55s ease;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

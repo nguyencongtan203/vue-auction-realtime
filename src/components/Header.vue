@@ -108,28 +108,18 @@
         </a>
       </nav>
       <!-- User section desktop -->
-      <div class="hidden lg:flex items-center gap-3">
+      <div class="hidden lg:flex items-center gap-1">
         <template v-if="user">
-          <!-- Icon chuông thông báo -->
-          <div class="relative">
+          <!-- Icon thông báo -->
+          <div class="relative w-max mx-auto">
             <button
+              ref="notificationButton"
               @click="toggleNotifications"
-              class="relative inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-slate-50 transition-colors"
+              type="button"
+              id="dropdownToggle"
+              class="inline-flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-slate-50"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6 text-slate-700"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M15 17h5l-5-5V9a6 6 0 10-12 0v3l-5 5h5m0 0v1a3 3 0 006 0v-1m-6 0h6"
-                />
-              </svg>
+              <font-awesome-icon :icon="faBell" class="text-xl" style="color: #0f6bae" />
               <!-- Badge số thông báo chưa đọc -->
               <span
                 v-if="unreadCount > 0"
@@ -140,59 +130,77 @@
             </button>
 
             <!-- Dropdown thông báo -->
-            <div
-              v-if="showNotifications"
-              class="absolute right-0 top-full w-80 bg-white border border-slate-200 shadow-xl rounded-xl z-50 mt-2"
-            >
-              <div class="p-4 border-b border-slate-200">
-                <h3 class="text-sm font-semibold text-slate-900">Thông báo</h3>
-              </div>
-              <div class="max-h-64 overflow-y-auto">
-                <div
-                  v-if="notifications.length === 0"
-                  class="p-4 text-center text-slate-500 text-sm"
-                >
-                  Không có thông báo mới
+            <transition name="fade" appear>
+              <div
+                ref="notificationDropdown"
+                v-if="showNotifications"
+                id="dropdownMenu"
+                class="absolute block left-0 bg-white py-4 z-[1000] min-w-full rounded-lg w-[410px] max-h-[500px] overflow-auto mt-2 border border-slate-200 shadow-xl rounded-xl z-50"
+              >
+                <div class="flex items-center justify-between px-4 mb-4">
+                  <p
+                    class="text-xs text-blue-600 font-medium cursor-pointer"
+                    @click="clearAllNotifications"
+                  >
+                    Xóa tất cả
+                  </p>
+                  <p
+                    class="text-xs text-blue-600 font-medium cursor-pointer"
+                    @click="markAllAsRead"
+                  >
+                    Đánh dấu tất cả đã đọc
+                  </p>
                 </div>
-                <div v-else>
-                  <div
+
+                <ul class="divide-y divide-gray-300">
+                  <li
                     v-for="notif in notifications.slice(0, 10)"
                     :key="notif.matb"
-                    class="p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                    :class="[
+                      'dropdown-item p-4 flex items-center cursor-pointer hover:bg-gray-200',
+                      { 'bg-gray-100': notif.trangthai === 'Chưa xem' },
+                    ]"
                     @click="markAsRead(notif.matb)"
                   >
                     <div class="flex items-start gap-3">
+                      <!-- Dot cho trạng thái chưa đọc -->
                       <div class="flex-shrink-0">
                         <div
                           class="w-2 h-2 bg-blue-500 rounded-full"
-                          v-if="notif.trangthai !== 'VIEWED'"
+                          v-if="notif.trangthai === 'Chưa xem'"
                         ></div>
                       </div>
+                      <!-- Nội dung thông báo -->
                       <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-slate-900 truncate">
+                        <h3 class="text-sm text-slate-900 font-medium">
                           {{ notif.tieude }}
+                        </h3>
+                        <p
+                          class="text-xs text-slate-500 leading-relaxed mt-2 line-clamp-2"
+                        >
+                          {{ notif.noidung }}
                         </p>
-                        <p class="text-sm text-slate-600 mt-1">{{ notif.noidung }}</p>
-                        <p class="text-xs text-slate-500 mt-1">
+                        <p class="text-xs text-blue-600 font-medium leading-3 mt-2">
                           {{ formatDate(notif.thoigian) }}
                         </p>
                       </div>
                     </div>
+                  </li>
+                  <div
+                    v-if="notifications.length === 0"
+                    class="p-4 text-center text-slate-500 text-sm"
+                  >
+                    Không có thông báo mới
                   </div>
-                </div>
-              </div>
-              <div
-                v-if="notifications.length > 10"
-                class="p-4 border-t border-slate-200 text-center"
-              >
-                <a
-                  href="#"
-                  class="text-sm text-blue-600 hover:text-blue-800"
-                  @click.prevent="goToAllNotifications"
-                  >Xem tất cả</a
+                </ul>
+                <p
+                  class="text-xs px-4 mt-6 mb-4 inline-block text-blue-600 font-medium cursor-pointer"
+                  @click="goToAllNotifications"
                 >
+                  Xem tất cả thông báo
+                </p>
               </div>
-            </div>
+            </transition>
           </div>
           <!-- Dropdown tài khoản -->
           <div class="relative group">
@@ -200,11 +208,15 @@
               type="button"
               class="inline-flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-slate-50"
             >
-              <font-awesome-icon icon="user" class="text-xl" />
+              <font-awesome-icon
+                :icon="faCircleUser"
+                class="text-xl"
+                style="color: #0f6bae"
+              />
               <span class="text-sm">{{ fullName || "Tài khoản" }}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-3.5 w-3.5 transform transition-transform duration-300 group-hover:rotate-180"
+                class="h-3.5 w-3.5 transform transition-transform duration-300 group-hover:rotate-180 top-[2px] relative"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -217,7 +229,7 @@
             </button>
 
             <div
-              class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full w-56 bg-white border border-slate-200 shadow-xl rounded-xl z-50"
+              class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full w-56 bg-white border border-slate-200 shadow-xl rounded-xl z-100"
             >
               <div class="p-2">
                 <a
@@ -446,12 +458,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, inject } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { useUserStore } from "../stores/userStore";
 import Cookies from "js-cookie";
 import { useAuctionNotificationStore } from "../stores/useAuctionNotificationStore";
+import { faBell, faCircleUser } from "@fortawesome/free-solid-svg-icons";
 const API = "http://localhost:8082/api";
 const router = useRouter();
 const route = useRoute();
@@ -516,33 +529,70 @@ const showToast = (message, type = "success") => {
 };
 
 // Notifications
-const auctionNotificationStore = useAuctionNotificationStore()
-const notifications = computed(() => auctionNotificationStore.notifications)
-const unreadCount = computed(() => auctionNotificationStore.unreadCount)
-const showNotifications = ref(false)
-
+const auctionNotificationStore = useAuctionNotificationStore();
+const notifications = computed(() => auctionNotificationStore.notifications);
+const unreadCount = computed(() => auctionNotificationStore.unreadCount);
+const showNotifications = ref(false);
+const notificationDropdown = ref(null);
+const notificationButton = ref(null);
 const toggleNotifications = () => {
-  showNotifications.value = !showNotifications.value
-}
-
+  showNotifications.value = !showNotifications.value;
+};
+// đánh dấu đã đọc
 const markAsRead = async (id) => {
-  await auctionNotificationStore.markAsRead(id)
-}
+  await auctionNotificationStore.markAsRead(id);
+};
+
+const clearAllNotifications = async () => {
+  // xóa tất cả
+  await auctionNotificationStore.clearAll();
+};
+
+const markAllAsRead = async () => {
+  // đánh dấu tất cả đã đọc
+  await auctionNotificationStore.markAllAsRead();
+};
+
+// đóng dropdown thông báo khi click ngoài
+const handleClickOutside = (event) => {
+  if (
+    notificationDropdown.value &&
+    !notificationDropdown.value.contains(event.target) &&
+    notificationButton.value &&
+    !notificationButton.value.contains(event.target)
+  ) {
+    showNotifications.value = false;
+  }
+};
+
+// Watch showNotifications để add/remove listener
+watch(showNotifications, (newVal) => {
+  if (newVal) {
+    document.addEventListener("click", handleClickOutside);
+  } else {
+    document.removeEventListener("click", handleClickOutside);
+  }
+});
+
+// Cleanup khi component unmount
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 
 const goToAllNotifications = () => {
-  router.push({ name: "Notifications" })
-  showNotifications.value = false
-}
+  router.push({ name: "Notifications" });
+  showNotifications.value = false;
+};
 
 const formatDate = (dateStr) => {
-  const date = new Date(dateStr)
-  return date.toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+  const date = new Date(dateStr);
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 // Auth state
 const user = computed(() => userStore.user);
