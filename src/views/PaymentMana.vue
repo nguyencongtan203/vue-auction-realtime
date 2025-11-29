@@ -240,9 +240,12 @@
               </div>
               <div class="line">
                 <span class="label">Giá thắng</span>
-                <span class="value strong text-sky-700">{{
-                  formatCurrency(item.sotien)
-                }}</span>
+                <span class="value strong text-sky-700">
+                  {{ formatCurrency(item.sotien) }}
+                  <small class="notice text-gray-400 text-xs ml-1"
+                    >(Đã trừ tiền cọc)</small
+                  >
+                </span>
               </div>
               <div class="line">
                 <span class="label">Hạn thanh toán</span>

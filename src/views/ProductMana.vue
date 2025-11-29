@@ -172,7 +172,6 @@
               <th>Tiền cọc</th>
               <th>Giá cao nhất</th>
               <th>Trạng thái</th>
-              <th>Kết quả</th>
               <th>Người tham gia</th>
               <th>Hành động</th>
             </tr>
@@ -191,7 +190,6 @@
                   {{ a.trangthai }}
                 </span>
               </td>
-              <td>{{ a.ketquaphien || "—" }}</td>
               <td>{{ a.slnguoithamgia }}</td>
               <td>
                 <template v-if="a.trangthai == 'Chờ duyệt'">

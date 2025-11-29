@@ -74,7 +74,9 @@
         </section>
 
         <section class="card bid-card" v-if="!auctionError">
-          <h3 class="card-title">Trả giá</h3>
+          <h3 class="card-title">
+            Trả giá <small class="notice text-gray-400 text-xs ml-1">(Số lần tối đa 10)</small>
+          </h3>
           <div class="flex flex-wrap items-end gap-3">
             <div class="flex flex-col">
               <label
@@ -87,14 +89,29 @@
                 type="number"
                 v-model.number="bidStep"
                 :min="minBidStep"
+                :max="10"
                 :disabled="isWaiting || sending || !canBid"
                 class="w-24 px-3 py-1.5 rounded-md border border-slate-300 bg-slate-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
             <button
+              @click="setBidStep(5)"
+              :disabled="isWaiting || sending || !canBid"
+              class="btn-quick px-3 py-1.5 rounded-md text-xs font-bold text-white bg-[#127fcf] hover:bg-[#1992eb] btn-flash disabled:bg-slate-400 transition disabled:cursor-not-allowed"
+            >
+              5×
+            </button>
+            <button
+              @click="setBidStep(10)"
+              :disabled="isWaiting || sending || !canBid"
+              class="btn-quick px-3 py-1.5 rounded-md text-xs font-bold text-white bg-[#127fcf] hover:bg-[#1992eb] btn-flash disabled:bg-slate-400 transition disabled:cursor-not-allowed"
+            >
+              10×
+            </button>
+            <button
               @click="sendBid"
               :disabled="sending || isWaiting || !stompConnected || !canBid"
-              class="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold tracking-wide text-white bg-[#127fcf] hover:bg-[#1992eb] btn-flash disabled:bg-slate-400 shadow-sm transition disabled:cursor-not-allowed"
+              class="inline-flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold tracking-wide text-white bg-[#127fcf] hover:bg-[#1992eb] btn-flash disabled:bg-slate-400 transition disabled:cursor-not-allowed"
             >
               <span v-if="sending" class="loader-inline !w-4 !h-4"></span>
               <span v-else-if="isWaiting">Chờ {{ countdown }}s</span>
@@ -285,9 +302,7 @@ const statusClass = computed(() => {
   return "neutral";
 });
 
-// Thêm computed minBidStep
 const minBidStep = computed(() => {
-  // Nếu giá cao nhất đạt được === 0 (lần đầu), cho phép 0; ngược lại >=1
   return highestPrice.value === 0 ? 0 : 1;
 });
 
@@ -390,7 +405,7 @@ async function fetchAuction() {
       const r = res.data.result;
       productName.value = r?.sanPham?.tensp || "";
       startPrice.value = Number(r?.giakhoidiem || 0);
-      highestPrice.value = Number(r?.giacaonhatdatduoc || 0); // Sửa: không fallback giaKhoiDiem
+      highestPrice.value = Number(r?.giacaonhatdatduoc || 0);
       stepPrice.value = Number(r?.buocgia || 0);
       startTime.value = r?.thoigianbd || null;
       endTime.value = r?.thoigiankt || null;
@@ -458,7 +473,7 @@ function onIncomingBid(frame) {
     return;
   }
   if (typeof data.sotien === "number") highestPrice.value = data.sotien;
-  if (data.taiKhoanNguoiRaGia?.matk === user.value?.matk) startCooldown(20);
+  if (data.taiKhoanNguoiRaGia?.matk === user.value?.matk) startCooldown(10);
   if (data.maphientg) {
     const i = bids.value.findIndex((b) => b.maphientg === data.maphientg);
     if (i >= 0) {
@@ -482,6 +497,10 @@ function disconnectWebSocket() {
   stompConnected.value = false;
   if (reconnectTimer) clearTimeout(reconnectTimer);
   reconnectTimer = null;
+}
+
+function setBidStep(val) {
+  bidStep.value = val;
 }
 
 function sendBid() {
@@ -508,6 +527,10 @@ function sendBid() {
   }
   if (!Number.isInteger(bidStep.value) || bidStep.value < minBidStep.value) {
     actionError.value = `Số lần phải ≥ ${minBidStep.value}.`;
+    return;
+  }
+  if (bidStep.value > 10) {
+    actionError.value = "Số lần không được vượt quá 10.";
     return;
   }
   sending.value = true;
