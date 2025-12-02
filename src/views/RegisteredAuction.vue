@@ -1,3 +1,4 @@
+<!-- RegisteredAuction.vue -->
 <template>
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white"
@@ -187,9 +188,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, onActivated, watch,computed } from "vue";
+import { ref, onMounted, onUnmounted, onActivated, watch, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 import { useRouter, useRoute } from "vue-router";
 
 defineOptions({ name: "RegisteredSessions" });
@@ -197,6 +198,7 @@ defineOptions({ name: "RegisteredSessions" });
 const router = useRouter();
 const route = useRoute();
 const API = "http://localhost:8082/api";
+const userStore = useUserStore();
 
 const auctions = ref([]);
 const loading = ref(true);
@@ -237,6 +239,7 @@ function prevPage() {
 function nextPage() {
   if (canNext.value) goTo(page.value.number + 1);
 }
+
 // Timer cho countdown
 const now = ref(Date.now());
 let timer = null;
@@ -314,7 +317,7 @@ async function fetchAuctions(pageNumber = 0) {
   inFlight.value = true;
 
   try {
-    const token = Cookies.get("jwt_token") || Cookies.get("token");
+    const token = userStore.token;
     if (!token) {
       error.value = "Bạn cần đăng nhập.";
       loading.value = false;
@@ -368,7 +371,7 @@ function goTo(n) {
 
 // Refetch khi quay lại trang (keep-alive)
 onActivated(() => {
-  // Chỉ refetch nếu không có request đang chạy
+  // refetch
   if (!inFlight.value) {
     fetchAuctions(page.value.number);
   }

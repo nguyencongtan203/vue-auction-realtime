@@ -1,3 +1,4 @@
+<!-- Home.vue -->
 <template>
   <div class="min-h-screen flex flex-col bg-white text-slate-800">
     <main class="flex-1">

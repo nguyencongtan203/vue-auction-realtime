@@ -11,9 +11,9 @@
       >
         <!-- Icon cảnh báo -->
         <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          <div class="w-16 h-16 rounded-full flex items-center justify-center" :style="{ backgroundColor: iconBg }">
+            <svg class="w-8 h-8" :style="{ color: iconColor }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="iconPath"></path>
             </svg>
           </div>
         </div>
@@ -28,7 +28,7 @@
           <button type="button" class="btn-cancel" @click="$emit('close')">
             Hủy
           </button>
-          <button type="button" class="btn-submit btn-flash" @click="$emit('submit')">
+          <button type="button" class="btn-submit btn-flash" :style="{ background: buttonBg, color: '#ffffff' }" @click="$emit('submit')">
             Xác nhận
           </button>
         </div>
@@ -38,12 +38,52 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   visible: Boolean,
   message: String,
+  actionType: {
+    type: String,
+    default: 'delete',
+    validator: (value) => ['create', 'update', 'delete'].includes(value),
+  },
 });
 
 defineEmits(['close', 'submit']);
+
+// Computed cho icon và màu sắc dựa trên actionType
+const iconConfig = computed(() => {
+  switch (props.actionType) {
+    case 'create':
+      return {
+        path: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+        color: '#10b981',
+        bg: '#ecfdf5',
+        buttonBg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      };
+    case 'update':
+      return {
+        path: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z', // Icon warning (dấu chấm than)
+        color: '#f59e0b',
+        bg: '#fffbeb',
+        buttonBg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+      };
+    case 'delete':
+    default:
+      return {
+        path: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z', // Icon warning (dấu chấm than)
+        color: '#dc2626',
+        bg: '#fef2f2',
+        buttonBg: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+      };
+  }
+});
+
+const iconPath = computed(() => iconConfig.value.path);
+const iconColor = computed(() => iconConfig.value.color);
+const iconBg = computed(() => iconConfig.value.bg);
+const buttonBg = computed(() => iconConfig.value.buttonBg);
 </script>
 
 <style scoped>
@@ -89,15 +129,13 @@ defineEmits(['close', 'submit']);
 .btn-submit {
   padding: 10px 24px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  color: #ffffff;
   font-weight: 600;
   transition: all 0.2s ease;
   min-width: 100px;
 }
 
 .btn-submit:hover {
-  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  filter: brightness(1.1);
 }
 
 .btn-submit:active {

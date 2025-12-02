@@ -1,3 +1,4 @@
+<!-- RegisterProduct.vue -->
 <template>
   <div class="min-h-screen flex flex-col items-center bg-gray-50 py-10 px-4">
     <h2 class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10">ĐĂNG KÝ TÀI SẢN</h2>
@@ -159,11 +160,11 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 import SoftDropdown from "@/components/SoftDropdown.vue";
 
 const API = "http://localhost:8082/api";
-
+const userStore = useUserStore();
 const product = ref({
   name: "",
   category: "",
@@ -294,7 +295,7 @@ const submitProduct = async () => {
   if (product.value.images.length === 0) errors.value.images = "Thêm ít nhất 1 ảnh.";
   if (Object.keys(errors.value).length > 0) return;
 
-  const token = Cookies.get("jwt_token");
+  const token = userStore.token;
   if (!token) {
     showToast("Phiên đăng nhập đã hết hạn!", "error");
     return;

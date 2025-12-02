@@ -1,8 +1,4 @@
 @reference "../tailwind.css";
-
-/* --- PAGE WRAPPER --- */
-
-
 /* --- TOOLBAR --- */
 .toolbar {
   display: flex;

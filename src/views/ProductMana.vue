@@ -1,29 +1,63 @@
+<!-- ProductMana.vue -->
 <template>
-  <div class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white">
+  <div
+    class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white"
+  >
     <section class="max-w-[1200px] mx-auto px-4 lg:px-6 pt-2">
       <div class="flex items-end justify-center">
-        <h1 class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10">
+        <h1
+          class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
+        >
           QUẢN LÝ TÀI SẢN
         </h1>
       </div>
     </section>
 
-    <!-- Tabs -->
-    <div class="max-w-[1400px] mx-auto menu flex flex-wrap gap-3 mb-6 pb-1">
-      <button
-        :class="{ 'tab-btn--active': activeTab === 'products' }"
-        @click="activeTab = 'products'"
-        class="tab-btn group"
-      >
-        <span>Sản phẩm đã đăng ký</span>
-      </button>
-      <button
-        :class="{ 'tab-btn--active': activeTab === 'auctions' }"
-        @click="activeTab = 'auctions'"
-        class="tab-btn group"
-      >
-        <span>Phiên đấu giá</span>
-      </button>
+    <!-- Tabs with search -->
+    <div class="max-w-[1400px] mx-auto flex justify-between items-center gap-3 mb-6 pb-1">
+      <!-- Tabs (justify-start) -->
+      <div class="flex flex-wrap gap-3">
+        <button
+          :class="{ 'tab-btn--active': activeTab === 'products' }"
+          @click="activeTab = 'products'"
+          class="tab-btn group"
+        >
+          <span>Sản phẩm đã đăng ký</span>
+        </button>
+        <button
+          :class="{ 'tab-btn--active': activeTab === 'auctions' }"
+          @click="activeTab = 'auctions'"
+          class="tab-btn group"
+        >
+          <span>Phiên đấu giá</span>
+        </button>
+      </div>
+
+      <!-- Search (justify-end) -->
+      <div class="relative flex-1 max-w-[200px] max-w-sm">
+        <input
+          v-model="currentKeyword"
+          type="text"
+          class="search-input w-full"
+          :placeholder="
+            activeTab === 'products'
+              ? 'Nhập mã/tên sản phẩm'
+              : 'Nhập mã phiên đấu giá'
+          "
+        />
+        <svg
+          class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
     </div>
 
     <!-- Danh sách sản phẩm -->
@@ -137,27 +171,37 @@
       </div>
 
       <!-- PHÂN TRANG cho products -->
-        <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
-          <div class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center">
-            <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-              <button class="page-pill" @click="prevProductsPage" :disabled="!canPrevProducts">
-                ‹ Trước
-              </button>
-              <button
-                v-for="n in numericPagesProducts"
-                :key="n"
-                class="page-num"
-                :class="n === productPage ? 'page-num--active' : ''"
-                @click="goToProductsPage(n)"
-              >
-                {{ n }}
-              </button>
-              <button class="page-pill" @click="nextProductsPage" :disabled="!canNextProducts">
-                Sau ›
-              </button>
-            </nav>
-          </div>
-        </section>
+      <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
+        <div
+          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+        >
+          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+            <button
+              class="page-pill"
+              @click="prevProductsPage"
+              :disabled="!canPrevProducts"
+            >
+              ‹ Trước
+            </button>
+            <button
+              v-for="n in numericPagesProducts"
+              :key="n"
+              class="page-num"
+              :class="n === productPage ? 'page-num--active' : ''"
+              @click="goToProductsPage(n)"
+            >
+              {{ n }}
+            </button>
+            <button
+              class="page-pill"
+              @click="nextProductsPage"
+              :disabled="!canNextProducts"
+            >
+              Sau ›
+            </button>
+          </nav>
+        </div>
+      </section>
     </div>
 
     <!-- Danh sách phiên đấu giá -->
@@ -206,27 +250,37 @@
         Không có phiên đấu giá nào.
       </div>
 
-        <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
-          <div class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center">
-            <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-              <button class="page-pill" @click="prevAuctionsPage" :disabled="!canPrevAuctions">
-                ‹ Trước
-              </button>
-              <button
-                v-for="n in numericPagesAuctions"
-                :key="n"
-                class="page-num"
-                :class="n === auctionPage ? 'page-num--active' : ''"
-                @click="goToAuctionsPage(n)"
-              >
-                {{ n }}
-              </button>
-              <button class="page-pill" @click="nextAuctionsPage" :disabled="!canNextAuctions">
-                Sau ›
-              </button>
-            </nav>
-          </div>
-        </section>
+      <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
+        <div
+          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+        >
+          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+            <button
+              class="page-pill"
+              @click="prevAuctionsPage"
+              :disabled="!canPrevAuctions"
+            >
+              ‹ Trước
+            </button>
+            <button
+              v-for="n in numericPagesAuctions"
+              :key="n"
+              class="page-num"
+              :class="n === auctionPage ? 'page-num--active' : ''"
+              @click="goToAuctionsPage(n)"
+            >
+              {{ n }}
+            </button>
+            <button
+              class="page-pill"
+              @click="nextAuctionsPage"
+              :disabled="!canNextAuctions"
+            >
+              Sau ›
+            </button>
+          </nav>
+        </div>
+      </section>
     </div>
 
     <!-- Popup -->
@@ -252,6 +306,7 @@
     <PopupSubmit
       :visible="showConfirmPopup"
       :message="confirmMessage"
+      actionType="delete"
       @close="showConfirmPopup = false"
       @submit="handleConfirmDelete"
     />
@@ -269,7 +324,9 @@
           </div>
           <div class="px-4 py-2 -mx-3">
             <div class="mx-3">
-              <span class="font-semibold" :class="toastMeta.titleColor">{{ toastMeta.title }}</span>
+              <span class="font-semibold" :class="toastMeta.titleColor">{{
+                toastMeta.title
+              }}</span>
               <p class="text-sm text-gray-600">{{ toast.message }}</p>
             </div>
           </div>
@@ -282,7 +339,7 @@
 <script setup>
 import { ref, reactive, onMounted, onActivated, onUnmounted, computed, watch } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore"; // Import store
 import UpdateProduct from "@/components/UpdateProduct.vue";
 import CreateAuction from "@/components/CreateAuction.vue";
 import UpdateAuction from "@/components/UpdateAuction.vue";
@@ -291,6 +348,7 @@ import PopupSubmit from "@/components/PopupSubmit.vue";
 defineOptions({ name: "ProductManagement" });
 
 const API = "http://localhost:8082/api";
+const userStore = useUserStore(); // Sử dụng userStore
 
 // Reactive state
 const activeTab = ref("products");
@@ -316,7 +374,19 @@ const auctionPage = ref(1);
 const auctionPageSize = ref(8);
 const auctionTotalPages = ref(1);
 
+const keywordProducts = ref(""); // Keyword cho products
+const keywordAuctions = ref(""); // Keyword cho auctions
+
 const toast = reactive({ show: false, message: "", type: "success" });
+
+// Debounce function
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
 
 // Computed
 const filteredProducts = computed(() =>
@@ -329,6 +399,17 @@ const canNextProducts = computed(() => productPage.value < productTotalPages.val
 const canPrevAuctions = computed(() => auctionPage.value > 1);
 const canNextAuctions = computed(() => auctionPage.value < auctionTotalPages.value);
 
+const currentKeyword = computed({
+  get: () =>
+    activeTab.value === "products" ? keywordProducts.value : keywordAuctions.value,
+  set: (value) => {
+    if (activeTab.value === "products") {
+      keywordProducts.value = value;
+    } else {
+      keywordAuctions.value = value;
+    }
+  },
+});
 const numericPagesProducts = computed(() => {
   const total = productTotalPages.value;
   const p = productPage.value;
@@ -404,6 +485,23 @@ watch(activeTab, (tab) => {
   else fetchAuctions();
 });
 
+// Watch keyword với debounce
+watch(
+  keywordProducts,
+  debounce(() => {
+    productPage.value = 1;
+    fetchProducts();
+  }, 700)
+);
+
+watch(
+  keywordAuctions,
+  debounce(() => {
+    auctionPage.value = 1;
+    fetchAuctions();
+  }, 700)
+);
+
 // Functions
 const getImageUrl = (tenanh) => `${API}/imgs/${tenanh}`;
 
@@ -445,11 +543,12 @@ const handleAuctionUpdated = async () => {
 
 async function fetchProducts() {
   try {
-    const token = Cookies.get("jwt_token");
+    const token = userStore.token; // Sử dụng token từ store
     if (!token) return;
     const res = await axios.get(`${API}/products/find-by-user`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
+        keyword: keywordProducts.value, // Thêm keyword
         page: productPage.value - 1,
         size: productPageSize.value,
         sort: "masp,asc",
@@ -470,11 +569,12 @@ async function fetchProducts() {
 
 async function fetchAuctions() {
   try {
-    const token = Cookies.get("jwt_token");
+    const token = userStore.token; // Sử dụng token từ store
     if (!token) return;
     const res = await axios.get(`${API}/auctions/find-by-user`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
+        keyword: keywordAuctions.value, // Thêm keyword
         page: auctionPage.value - 1,
         size: auctionPageSize.value,
         sort: "thoigianbd,desc",
@@ -550,7 +650,9 @@ function statusColor(st) {
 
 const formatPrice = (price) => {
   if (price == null || price === undefined) return "N/A";
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+    price
+  );
 };
 
 function showToast(msg, type = "success") {
@@ -576,7 +678,7 @@ const handleConfirmDelete = () => {
 
 async function deleteProduct(masp) {
   try {
-    const token = Cookies.get("jwt_token");
+    const token = userStore.token; // Sử dụng token từ store
     if (!token) {
       showToast("Không tìm thấy token!", "error");
       return;
@@ -630,4 +732,8 @@ onUnmounted(() => {
 @import "@/assets/styles/productmana.css";
 @import "@/assets/styles/toast.css";
 @import "@/assets/styles/home.css";
+
+.search-input {
+  @apply h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400;
+}
 </style>

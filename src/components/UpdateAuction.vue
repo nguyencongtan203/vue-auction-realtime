@@ -1,3 +1,4 @@
+<!-- UpdateAuction.vue -->
 <template>
   <!-- Popup -->
   <div
@@ -20,19 +21,19 @@
       </div>
 
       <form class="grid grid-cols-1 md:grid-cols-2 gap-5" @submit.prevent="save">
-        <!-- Mã phiên (read-only) -->
+        <!-- Mã phiên -->
         <div class="flex flex-col md:flex-row md:items-start gap-3">
           <label class="w-52 font-medium text-gray-700">Mã phiên</label>
           <p class="font-semibold text-gray-700 w-full">{{ form.maphiendg }}</p>
         </div>
 
-        <!-- Mã sản phẩm (read-only) -->
+        <!-- Mã sản phẩm -->
         <div class="flex flex-col md:flex-row md:items-start gap-3">
           <label class="w-52 font-medium text-gray-700">Mã sản phẩm</label>
           <p class="font-semibold text-gray-700 w-full">{{ form.sanPham?.masp }}</p>
         </div>
 
-        <!-- Giá khởi điểm (read-only) -->
+        <!-- Giá khởi điểm -->
         <div class="flex flex-col md:flex-row md:items-start gap-3">
           <label class="w-52 font-medium text-gray-700">Giá khởi điểm</label>
           <p class="font-semibold text-gray-700 w-full">
@@ -40,7 +41,7 @@
           </p>
         </div>
 
-        <!-- Fields có thể edit -->
+        <!-- Fields -->
         <template v-for="f in fields" :key="f.key">
           <div class="flex flex-col md:flex-row md:items-start gap-3">
             <label class="w-52 font-medium text-gray-700">{{ f.label }}</label>
@@ -142,9 +143,10 @@
 <script setup>
 import { reactive, ref, watch, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 
 const API = "http://localhost:8082/api";
+const userStore = useUserStore();
 
 // Props & Emits
 const props = defineProps({
@@ -308,7 +310,7 @@ function extractErrorMessage(err) {
 }
 
 const save = async () => {
-  const token = Cookies.get("jwt_token");
+  const token = userStore.token;
   if (!token) return showToast("Vui lòng đăng nhập lại.", "error");
 
   fields.forEach(({ key }) => validateNumber(key));
@@ -368,10 +370,10 @@ watch(
       giakhoidiem: a.giakhoidiem,
       buocgia: a.buocgia,
       tiencoc: a.tiencoc,
-      thoigianbd: a.thoigianbd ? new Date(a.thoigianbd).toISOString().slice(0, 16) : "",
-      thoigiankt: a.thoigiankt ? new Date(a.thoigiankt).toISOString().slice(0, 16) : "",
-      thoigianbddk: a.thoigianbddk ? new Date(a.thoigianbddk).toISOString().slice(0, 16) : "",
-      thoigianktdk: a.thoigianktdk ? new Date(a.thoigianktdk).toISOString().slice(0, 16) : "",
+      thoigianbd: a.thoigianbd ? a.thoigianbd.replace(' ', 'T').slice(0, 16) : "",
+      thoigiankt: a.thoigiankt ? a.thoigiankt.replace(' ', 'T').slice(0, 16) : "",
+      thoigianbddk: a.thoigianbddk ? a.thoigianbddk.replace(' ', 'T').slice(0, 16) : "",
+      thoigianktdk: a.thoigianktdk ? a.thoigianktdk.replace(' ', 'T').slice(0, 16) : "",
     });
     formattedValues.buocgia = a.buocgia ? new Intl.NumberFormat("vi-VN").format(a.buocgia) : "";
     formattedValues.tiencoc = a.tiencoc ? new Intl.NumberFormat("vi-VN").format(a.tiencoc) : "";

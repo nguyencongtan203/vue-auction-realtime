@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
-    <!-- <img src="/email-verified.svg" alt="Verified" class="w-32 h-32 mb-6" /> -->
     <h1 class="text-[22px] md:text-[26px] font-semibold text-green-600 mb-2">
       Xác thực email thành công!
     </h1>

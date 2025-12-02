@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Cookies from 'js-cookie'
-import Home from '../views/Home.vue'
-import Auction from '../components/Auction.vue'
-import AuctionRoom from '../views/AuctionRoom.vue'
-import UserInfo from '../views/UserInfo.vue'      
+import Home from '@/views/Home.vue'
+import AuctionRoom from '@/views/AuctionRoom.vue'
+import Auction from '@/views/Auction.vue'
+import UserInfo from '@/views/UserInfo.vue'      
 import RegisterProduct from '@/views/RegisterProduct.vue'
 import ProductMana from '@/views/ProductMana.vue'
 import AuctionDetail from '@/views/AuctionDetail.vue'
@@ -13,8 +13,8 @@ import PaymentSuccess from '@/views/PaymentSuccess.vue'
 import RegisteredAuctions from '@/views/RegisteredAuction.vue'
 const routes = [
   { path: '/', name: 'Home', component: Home },
-  { path: '/auction-room', name: 'AuctionRoom', component: AuctionRoom },
-  { path: '/auction', name: 'Auction', component: Auction, meta: { requiresAuth: true } },
+  { path: '/auction', name: 'AuctionRoom', component: Auction },
+  { path: '/auction-room', name: 'Auction', component: AuctionRoom, meta: { requiresAuth: true } },
   { path: '/user-info', name: 'UserInfo', component: UserInfo, meta: { requiresAuth: true } },
   { path: '/register-product', name: 'RegisterProduct', component: RegisterProduct, meta: { requiresAuth: true } },
   { path: '/product-management', name: 'ProductManagement', component: ProductMana, meta: { requiresAuth: true } },

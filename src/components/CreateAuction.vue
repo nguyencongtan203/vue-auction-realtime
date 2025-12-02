@@ -1,3 +1,4 @@
+<!-- CreateAuction.vue -->
 <template>
   <!-- Popup -->
   <div
@@ -92,6 +93,15 @@
     </div>
   </div>
 
+  <!-- Popup xác nhận -->
+  <PopupSubmit
+    :visible="showConfirmPopup"
+    :message="confirmMessage"
+    actionType="create"
+    @close="showConfirmPopup = false"
+    @submit="handleConfirmSubmit"
+  />
+
   <!-- Toast (giữ đúng template đã chuẩn hoá trước đó) -->
   <transition name="slide-fade">
     <div v-if="toastSafe.show" class="fixed top-5 right-5 z-[60]">
@@ -132,9 +142,11 @@
 <script setup>
 import { reactive, ref, watch, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
+import PopupSubmit from "@/components/PopupSubmit.vue";
 
 const API = "http://localhost:8082/api";
+const userStore = useUserStore();
 
 // Props & Emits
 const props = defineProps({
@@ -170,6 +182,8 @@ const errors = reactive({});
 const submitting = ref(false);
 const toast = ref({ show: false, message: "", type: "info" });
 const formattedValues = reactive({ buocgia: "", tiencoc: "" });
+const showConfirmPopup = ref(false);
+const confirmMessage = ref("");
 
 // Computed
 const toastSafe = computed(
@@ -297,13 +311,23 @@ function extractErrorMessage(err) {
 }
 
 const save = async () => {
-  const token = Cookies.get("jwt_token");
+  const token = userStore.token;
   if (!token) return showToast("Vui lòng đăng nhập lại.", "error");
 
   fields.forEach(({ key }) => validateNumber(key));
   validateTimes();
   if (Object.values(errors).some((e) => e))
     return showToast("Kiểm tra lại dữ liệu.", "error");
+
+  confirmMessage.value = "Bạn có chắc muốn tạo phiên đấu giá này?";
+  showConfirmPopup.value = true;
+};
+
+const handleConfirmSubmit = async () => {
+  showConfirmPopup.value = false;
+
+  const token = userStore.token;
+  if (!token) return showToast("Vui lòng đăng nhập lại.", "error");
 
   submitting.value = true;
   try {
@@ -313,7 +337,7 @@ const save = async () => {
       thoigiankt: formatDateTime(form.thoigiankt),
       thoigianbddk: formatDateTime(form.thoigianbddk),
       thoigianktdk: formatDateTime(form.thoigianktdk),
-      giakhoidiem: form.giamongdoi, // Sử dụng giá mong đợi làm khởi điểm
+      giakhoidiem: form.giamongdoi,
       buocgia: form.buocgia,
       tiencoc: form.tiencoc,
     };
@@ -322,11 +346,11 @@ const save = async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // Chuẩn BE: { code, message, result }
+    // { code, message, result }
     const { code, message, result } = res.data || {};
     if (code === 200) {
       showToast(message || "Tạo phiên đấu giá thành công!", "success");
-      emit("created", result); // gửi kèm DTO nếu cần dùng
+      emit("created", result);
       setTimeout(() => close(), 600);
     } else {
       showToast(message || "Tạo phiên thất bại!", "error");

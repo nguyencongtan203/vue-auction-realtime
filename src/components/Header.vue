@@ -1,6 +1,5 @@
-<!-- Header.vue -->
 <template>
-  <!-- Header / Navbar -->
+  <!-- Template giữ nguyên như bạn cung cấp -->
   <header
     style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px"
     class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100"
@@ -466,9 +465,9 @@ import { ref, computed, watch, onMounted, onUnmounted, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { useUserStore } from "../stores/userStore";
-import Cookies from "js-cookie";
 import { useAuctionNotificationStore } from "../stores/useAuctionNotificationStore";
 import { faBell, faCircleUser } from "@fortawesome/free-solid-svg-icons";
+
 const API = "http://localhost:8082/api";
 const router = useRouter();
 const route = useRoute();
@@ -517,7 +516,7 @@ const toastMeta = computed(() => {
       "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331Z",
       "M21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
     ],
-  };
+  }
 });
 
 // Toast
@@ -658,9 +657,10 @@ function goToCategory(cat, mobile = false) {
 function goRegisteredAuctions() {
   router.push({ name: "RegisteredAuctions" });
 }
+
 // Logout
 async function logout() {
-  const token = Cookies.get("jwt_token");
+  const token = userStore.token; // Sử dụng token từ store
   try {
     if (token) {
       await axios
@@ -722,6 +722,7 @@ onMounted(async () => {
   }
 });
 </script>
+
 <style scoped>
 @import "@/assets/styles/toast.css";
 </style>

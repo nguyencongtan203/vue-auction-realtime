@@ -1,3 +1,4 @@
+<!-- UserInfo.vue -->
 <template>
   <div class="min-h-screen flex flex-col items-center bg-gray-50 py-10 px-4">
     <h2
@@ -45,7 +46,7 @@
           <p class="text-gray-900 flex-1">{{ fullName }}</p>
         </div>
 
-        <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4">
           <label class="w-40 text-sm font-bold text-gray-700">Email</label>
           <div class="flex items-center gap-2 flex-1">
             <p class="text-gray-900">{{ user.email }}</p>
@@ -55,6 +56,15 @@
             <span v-else class="text-emerald-600 text-sm font-medium italic"
               >(Đã xác thực)</span
             >
+            <!-- Nút gửi xác thực lại nếu chưa xác thực -->
+            <button
+              v-if="!emailVerified"
+              @click="resendVerifyCode"
+              :disabled="resending"
+              class="ml-2 px-2 py-1 text-white text-xs rounded disabled:bg-gray-400 bg-[#127fcf] hover:bg-[#1992eb] font-semibold btn-flash"
+            >
+              {{ resending ? "Đang gửi..." : "Gửi lại" }}
+            </button>
           </div>
         </div>
 
@@ -206,24 +216,29 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 import ChangePasswordPopup from "@/components/ChangePasswordPopup.vue";
 import SoftDropdown from "@/components/SoftDropdown.vue";
 
 const API = "http://localhost:8082/api";
 
+const userStore = useUserStore();
+
 // Reactive state
 const changePasswordPopup = ref(null);
-const user = ref(null);
 const cities = ref([]);
-const loading = ref(true);
 const saving = ref(false);
 const editing = ref(false);
 const originalData = ref(null);
 const errors = ref({});
 const toast = ref({ show: false, message: "", type: "success" });
+const resending = ref(false); // Loading cho nút gửi xác thực
 
-// Computed
+// Computed từ store
+const user = computed(() => userStore.user);
+const loading = computed(() => userStore.loading);
+
+// Các computed khác giữ nguyên
 const toastMeta = computed(() => {
   const type = (toast.value.type || "info").toLowerCase();
   switch (type) {
@@ -326,7 +341,7 @@ function validateUserData() {
 
 async function saveChanges() {
   if (!validateUserData()) return;
-  const token = Cookies.get("jwt_token");
+  const token = userStore.token;
   if (!token) {
     showToast("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "error");
     return;
@@ -353,12 +368,8 @@ async function saveChanges() {
 
     const { code, result, message } = res.data || {};
     if (code === 200 && result) {
-      user.value = {
-        ...result,
-        diachi: result.diachi ?? "",
-        diachigiaohang: result.diachigiaohang ?? "",
-        thanhPho: result.thanhPho ?? { matp: "default" },
-      };
+      // Cập nhật store để đồng bộ
+      await userStore.fetchUser(); // Refresh user từ API
       showToast(message || "Cập nhật thông tin thành công!", "success");
       editing.value = false;
       errors.value = {};
@@ -379,43 +390,17 @@ function extractErrorMessage(err) {
   return err?.message || "Lỗi kết nối đến máy chủ!";
 }
 
-async function fetchUserAndCities() {
-  loading.value = true;
+async function fetchCities() {
   try {
-    const token = Cookies.get("jwt_token");
-    if (!token) {
-      showToast("Bạn chưa đăng nhập!", "error");
-      loading.value = false;
-      return;
-    }
-
-    const [meRes, citiesRes] = await Promise.all([
-      axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
-      axios.get(`${API}/cities/find-all`),
-    ]);
-
-    if (meRes.data?.code === 200 && meRes.data.result) {
-      const u = meRes.data.result;
-      user.value = {
-        ...u,
-        diachi: u.diachi ?? "",
-        diachigiaohang: u.diachigiaohang ?? "",
-        thanhPho: u.thanhPho ?? { matp: "default" },
-      };
-    } else {
-      showToast(meRes.data?.message || "Không thể tải thông tin người dùng!", "error");
-      user.value = null;
-    }
-
+    const citiesRes = await axios.get(`${API}/cities/find-all`);
     if (citiesRes.data?.code === 200 && Array.isArray(citiesRes.data.result)) {
       cities.value = citiesRes.data.result;
     } else {
       cities.value = [];
+      showToast("Không thể tải danh sách thành phố!", "error");
     }
   } catch (err) {
     showToast(extractErrorMessage(err), "error");
-  } finally {
-    loading.value = false;
   }
 }
 
@@ -423,8 +408,42 @@ function openChangePassword() {
   changePasswordPopup.value?.open();
 }
 
+// Hàm gửi xác thực lại
+async function resendVerifyCode() {
+  const token = userStore.token;
+  if (!token) {
+    showToast("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "error");
+    return;
+  }
+
+  resending.value = true;
+  try {
+    const res = await axios.post(`${API}/users/resend-verify-code`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const { code, message } = res.data || {};
+    if (code === 200) {
+      showToast(message || "Đã gửi email xác thực đến tài khoản email của bạn", "success");
+    } else {
+      showToast(message || "Không thể gửi email xác thực!", "error");
+    }
+  } catch (err) {
+    const msg = extractErrorMessage(err);
+    showToast(msg, "error");
+  } finally {
+    resending.value = false;
+  }
+}
+
 // Lifecycle
-onMounted(fetchUserAndCities);
+onMounted(async () => {
+  // Load user từ store nếu chưa có
+  if (!userStore.user) {
+    await userStore.loadUserFromCookies();
+  }
+  await fetchCities();
+});
 </script>
 
 <style scoped>

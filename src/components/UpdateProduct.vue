@@ -1,9 +1,12 @@
+<!-- UpdateProduct.vue -->
 <template>
+  <!-- Popup -->
   <div
     v-if="visible"
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
   >
     <div class="relative z-10 w-full max-w-3xl rounded-lg bg-white p-8 shadow-lg">
+      <!-- Header -->
       <div class="relative mb-6 border-b pb-3">
         <h2 class="text-2xl font-semibold text-gray-800 text-center">
           CẬP NHẬT SẢN PHẨM
@@ -147,6 +150,15 @@
     </div>
   </div>
 
+  <!-- Popup xác nhận -->
+  <PopupSubmit
+    :visible="showConfirmPopup"
+    :message="confirmMessage"
+    actionType="update"
+    @close="showConfirmPopup = false"
+    @submit="handleConfirmSubmit"
+  />
+
   <!-- Toast chỉ dành cho lỗi/ thông báo từ server -->
   <transition name="slide-fade">
     <div v-if="toast.show" class="fixed top-5 right-5 z-50">
@@ -174,10 +186,12 @@
 <script setup>
 import { reactive, ref, watch, onMounted, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 import SoftDropdown from "@/components/SoftDropdown.vue";
+import PopupSubmit from "@/components/PopupSubmit.vue";
 
 const API = "http://localhost:8082/api";
+const userStore = useUserStore();
 
 const props = defineProps({ visible: Boolean, product: Object });
 const emit = defineEmits(["close", "updated"]);
@@ -201,6 +215,8 @@ const originalImages = ref([]);
 const errors = reactive({});
 const toast = reactive({ show: false, message: "", type: "success" });
 const submitting = ref(false);
+const showConfirmPopup = ref(false);
+const confirmMessage = ref("");
 
 // Computed
 const catOptions = computed(() =>
@@ -336,9 +352,16 @@ function validate() {
 }
 
 async function save() {
-  if (!validate()) return; // Chỉ inline errors
+  if (!validate()) return;
 
-  const token = Cookies.get("jwt_token");
+  confirmMessage.value = "Bạn có chắc muốn cập nhật sản phẩm này?";
+  showConfirmPopup.value = true;
+}
+
+async function handleConfirmSubmit() {
+  showConfirmPopup.value = false;
+
+  const token = userStore.token;
   if (!token) {
     showToast("Vui lòng đăng nhập lại!", "error");
     return;

@@ -1,3 +1,4 @@
+<!-- PaymentMana.vue -->
 <template>
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white fade-in"
@@ -51,17 +52,51 @@
         >
           <span>Đã thanh toán</span>
         </button>
-      </div>
-
-      <div class="mb-2">
-        <span
-          v-if="inFlight"
-          class="inline-flex items-center text-[11px] px-2 py-1 rounded bg-sky-100 text-sky-700"
+        <button
+          :class="{ 'tab-btn--active': activeSubTab === 'REFUNDING' }"
+          @click="changeSubTab('REFUNDING')"
+          class="sub-tab-btn group"
         >
-          Đang cập nhật...
-        </span>
+          <span>Đang hoàn tiền</span>
+        </button>
+        <button
+          :class="{ 'tab-btn--active': activeSubTab === 'REFUNDED' }"
+          @click="changeSubTab('REFUNDED')"
+          class="sub-tab-btn group"
+        >
+          <span>Đã hoàn tiền</span>
+        </button>
+        <button
+          :class="{ 'tab-btn--active': activeSubTab === 'CANCELLED' }"
+          @click="changeSubTab('CANCELLED')"
+          class="sub-tab-btn group"
+        >
+          <span>Bị hủy</span>
+        </button>
       </div>
-
+      <!-- Thêm thanh tìm kiếm ở đây -->
+      <div class="flex justify-end mb-4">
+        <div class="relative flex-1 max-w-[200px] max-w-sm">
+          <input
+            v-model="keywordDeposit"
+            type="text"
+            class="search-input w-full"
+            placeholder="Nhập mã phiếu hoặc mã phiên đấu giá"
+          />
+          <svg
+            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
       <!-- Loading / Error -->
       <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
         <div class="flex flex-col items-center gap-3">
@@ -189,17 +224,37 @@
         >
           <span>Đã thanh toán</span>
         </button>
-      </div>
-
-      <div class="mb-2">
-        <span
-          v-if="winInFlight"
-          class="inline-flex items-center text-[11px] px-2 py-1 rounded bg-sky-100 text-sky-700"
+                <button
+          :class="{ 'tab-btn--active': activeWinSubTab === 'CANCELLED' }"
+          @click="changeWinSubTab('CANCELLED')"
+          class="sub-tab-btn group"
         >
-          Đang cập nhật...
-        </span>
+          <span>Bị hủy</span>
+        </button>
       </div>
-
+      <!-- Thêm thanh tìm kiếm ở đây -->
+      <div class="flex justify-end mb-4">
+        <div class="relative flex-1 max-w-[200px] max-w-sm">
+          <input
+            v-model="keywordWin"
+            type="text"
+            class="search-input w-full"
+            placeholder="Nhập mã phiếu hoặc mã phiên đấu giá"
+          />
+          <svg
+            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
       <!-- Loading / Error -->
       <div v-if="winLoading" class="flex justify-center items-center py-12 fade-in">
         <div class="flex flex-col items-center gap-3">
@@ -313,11 +368,12 @@
 <script setup>
 import { ref, onMounted, onActivated, onUnmounted, watch, computed } from "vue";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 
 defineOptions({ name: "DepositPayments" });
 
 const API = "http://localhost:8082/api";
+const userStore = useUserStore();
 const deposits = ref([]);
 const wins = ref([]);
 const loading = ref(true);
@@ -337,10 +393,21 @@ const depositPageSize = ref(8);
 const winPageSize = ref(8);
 const depositTotalPages = ref(1);
 const winTotalPages = ref(1);
+const keywordDeposit = ref("");
+const keywordWin = ref("");
 
 let abortController = null;
 let winAbortController = null;
 let visibilityHandlerAdded = false;
+
+// Debounce function
+function debounce(func, delay) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
+}
 
 // Computed cho deposit
 const canPrevDeposit = computed(() => depositPage.value > 1);
@@ -398,8 +465,11 @@ function softStatus(status) {
       return "pill-amber";
     case "Đã thanh toán":
       return "pill-green";
-    case "Hủy":
-    case "Đã hủy":
+    case "Đang hoàn tiền":
+      return "pill-orange";
+    case "Đã hoàn tiền":
+      return "pill-blue";
+    case "Bị hủy":
       return "pill-red";
     default:
       return "pill-gray";
@@ -415,7 +485,7 @@ async function fetchDeposits() {
   abortController = new AbortController();
 
   try {
-    const token = Cookies.get("jwt_token") || Cookies.get("token");
+    const token = userStore.token;
     if (!token) {
       error.value = "Bạn cần đăng nhập để xem phiếu thanh toán.";
       return;
@@ -425,6 +495,7 @@ async function fetchDeposits() {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         status: activeSubTab.value,
+        keyword: keywordDeposit.value,
         page: depositPage.value - 1,
         size: depositPageSize.value,
         sort: "thoigianthanhtoan,asc",
@@ -458,7 +529,7 @@ async function fetchWins() {
   winAbortController = new AbortController();
 
   try {
-    const token = Cookies.get("jwt_token") || Cookies.get("token");
+    const token = userStore.token;
     if (!token) {
       winError.value = "Bạn cần đăng nhập để xem phiếu thanh toán.";
       return;
@@ -468,6 +539,7 @@ async function fetchWins() {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         status: activeWinSubTab.value,
+        keyword: keywordWin.value, // Thêm keyword
         page: winPage.value - 1,
         size: winPageSize.value,
         sort: "thoigianthanhtoan,asc",
@@ -560,11 +632,13 @@ function onVisibilityChange() {
 async function handlePay(item) {
   payingItems.value[item.matc] = true;
   try {
+    const token = userStore.token;
     const res = await axios.get(`${API}/deposit-payments/create-order`, {
       params: {
         matc: item.matc,
         amount: item.phienDauGia.tiencoc || 0,
       },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (res.data.code === 200) {
       window.location.href = res.data.result;
@@ -581,11 +655,13 @@ async function handlePay(item) {
 async function handleWinPay(item) {
   payingWinItems.value[item.matt] = true;
   try {
+    const token = userStore.token;
     const res = await axios.get(`${API}/payments/create-order`, {
       params: {
         matt: item.matt,
         amount: item.sotien || 0,
       },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (res.data.code === 200) {
       window.location.href = res.data.result;
@@ -598,6 +674,23 @@ async function handleWinPay(item) {
     payingWinItems.value[item.matt] = false;
   }
 }
+
+// Watch keyword với debounce
+watch(
+  keywordDeposit,
+  debounce(() => {
+    depositPage.value = 1;
+    fetchDeposits();
+  }, 700)
+);
+
+watch(
+  keywordWin,
+  debounce(() => {
+    winPage.value = 1;
+    fetchWins();
+  }, 700)
+);
 
 watch(activeTab, (tab) => {
   if (tab === "deposit") fetchDeposits();
@@ -634,9 +727,23 @@ onUnmounted(() => {
 
 <style scoped>
 @import "@/assets/styles/home.css";
-/* =====================================
-   CÁC PHẦN CÒN LẠI GIỮ NGUYÊN (CARD, STATUS…)
-   ===================================== */
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 .soft-empty {
   background: linear-gradient(to right, #f9fafb, #f4f7fa);
   border: 1px solid #e2e8f0;
@@ -734,6 +841,14 @@ onUnmounted(() => {
   background: #fff5d9;
   color: #b86e00;
 }
+.pill-orange {
+  background: #fed7aa;
+  color: #9a3412;
+}
+.pill-blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
 .pill-red {
   background: #ffe9e9;
   color: #c03636;
@@ -785,5 +900,9 @@ onUnmounted(() => {
   .card-actions {
     justify-content: start;
   }
+}
+
+.search-input {
+  @apply h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400;
 }
 </style>

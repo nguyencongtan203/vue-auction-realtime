@@ -1,3 +1,4 @@
+<!-- AuctionDetail.vue -->
 <template>
   <div class="min-h-screen text-slate-800 py-10 px-6 max-w-5xl mx-auto fade-in">
      <!-- Loading / Error: Hiển thị khi đang tải hoặc có lỗi -->
@@ -272,11 +273,12 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
-import Cookies from "js-cookie";
+import { useUserStore } from "@/stores/userStore";
 
 const API = "http://localhost:8082/api/";
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 
 const auction = ref({});
 const loading = ref(true);
@@ -331,7 +333,7 @@ const thongTin = computed(() => [
 ]);
 
 // Helpers
-const getImageUrl = (tenanh) => `${API}imgs/${tenanh}`; // tránh // vì API đã có /
+const getImageUrl = (tenanh) => `${API}imgs/${tenanh}`;
 const setMainImage = (img) => (mainImage.value = img);
 const onImgError = (e) => (e.target.src = "https://placehold.co/400x400?text=No+Image");
 const formatDate = (iso) => {
@@ -407,7 +409,7 @@ function downloadCurrent() {
   a.remove();
 }
 
-// Error extraction theo chuẩn BE (ApiResponse)
+// Error extraction
 function extractErrorMessage(err) {
   if (err?.response?.data?.message) return err.response.data.message;
   if (typeof err?.response?.data === "string") return err.response.data;
@@ -422,7 +424,6 @@ async function fetchAuction(id) {
   images.value = [];
   mainImage.value = "";
   try {
-    // Chuẩn BE: ApiResponse { code, message, result }
     const res = await axios.get(`${API}auctions/find-by-id/${id}`);
     const { code, result, message } = res.data || {};
     if (code === 200 && result) {
@@ -434,8 +435,6 @@ async function fetchAuction(id) {
       error.value = message || "Không tìm thấy dữ liệu.";
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("Lỗi tải phiên:", err);
     error.value = extractErrorMessage(err) || "Không thể tải phiên đấu giá.";
   } finally {
     loading.value = false;
@@ -445,11 +444,10 @@ async function fetchAuction(id) {
 // Đăng ký
 async function handleRegister() {
   try {
-    const token = Cookies.get("jwt_token");
+    const token = userStore.token;
     if (!token)
       return showToast("Vui lòng đăng nhập trước khi đăng ký đấu giá.", "error");
 
-    // Chuẩn BE: ApiResponse { code, message, result }
     const res = await axios.post(
       `${API}deposit-payments/create`,
       { maphien: auction.value.maphiendg },
@@ -471,7 +469,7 @@ async function handleRegister() {
   }
 }
 
-/* Toast (chuẩn hoá giống template trước) */
+/* Toast */
 const toast = ref({ show: false, message: "", type: "success" });
 const toastMeta = computed(() => {
   const type = (toast.value.type || "info").toLowerCase();

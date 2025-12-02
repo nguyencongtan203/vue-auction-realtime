@@ -13,7 +13,6 @@ export const useUserStore = defineStore('user', {
   }),
 
   actions: {
-    // 🔹 Gọi API lấy thông tin người dùng
     async fetchUser() {
       if (!this.token) return null
       try {
@@ -32,24 +31,24 @@ export const useUserStore = defineStore('user', {
           this.logout()
         }
       } catch (err) {
-        console.error('❌ Lỗi khi fetch user:', err)
+        console.error('Lỗi khi fetch user:', err)
         this.logout()
       } finally {
         this.loading = false
       }
     },
 
-    // 🔹 Khi login thành công
+    // Khi login thành công
     setToken(token) {
       this.token = token
       Cookies.set('jwt_token', token, {
-        expires: 7,        // lưu 7 ngày
+        expires: 7,
         secure: false,     // đặt true nếu chạy https
         sameSite: 'Lax',
       })
     },
 
-    // 🔹 Load lại user khi reload trang
+    // Load lại user khi reload trang
     async loadUserFromCookies() {
       const token = Cookies.get('jwt_token')
       if (token && !this.user) {
@@ -58,7 +57,7 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    // 🔹 Kết nối SSE
+    // Kết nối SSE
     connectSSE() {
       if (!this.token) return
       const sseUrl = `http://localhost:8082/api/notifications/connect?token=${this.token}`
@@ -95,14 +94,14 @@ export const useUserStore = defineStore('user', {
     })
 
       eventSource.onerror = () => {
-        console.warn('⚠️ SSE connection closed')
+        console.warn('SSE connection closed')
       }
 
       this.sse = eventSource
-      console.log('✅ SSE connected')
+      console.log('SSE connected')
     },
 
-    // 🔹 Đăng xuất
+    // Đăng xuất
     logout() {
       this.user = null
       this.token = null
