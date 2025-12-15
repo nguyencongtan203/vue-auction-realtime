@@ -1,189 +1,201 @@
-<!-- RegisteredAuction.vue -->
 <template>
+  <!-- RegisteredAuction.vue -->
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white"
   >
-    <main class="flex-1">
-      <!-- Header -->
-      <section class="max-w-[1200px] mx-auto px-4 lg:px-6 pt-2">
-        <div class="flex items-end justify-center">
-          <h1
-            class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
-          >
-            PHIÊN ĐĂNG KÝ
-          </h1>
-        </div>
-      </section>
-
-      <!-- Loading / Error -->
-      <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
-        <div class="flex flex-col items-center gap-3">
-          <div id="wifi-loader">
-            <svg class="circle-outer" viewBox="0 0 86 86">
-              <circle class="back" cx="43" cy="43" r="40"></circle>
-              <circle class="front" cx="43" cy="43" r="40"></circle>
-              <circle class="new" cx="43" cy="43" r="40"></circle>
-            </svg>
-            <svg class="circle-middle" viewBox="0 0 60 60">
-              <circle class="back" cx="30" cy="30" r="27"></circle>
-              <circle class="front" cx="30" cy="30" r="27"></circle>
-            </svg>
-            <svg class="circle-inner" viewBox="0 0 34 34">
-              <circle class="back" cx="17" cy="17" r="14"></circle>
-              <circle class="front" cx="17" cy="17" r="14"></circle>
-            </svg>
-            <div class="text" data-text="Đang tải"></div>
-          </div>
-        </div>
-      </div>
-
-      <div v-else-if="error" class="text-center text-red-500 py-10 font-medium">
-        {{ error }}
-      </div>
-
-      <!-- List -->
-      <section class="max-w-[1200px] mx-auto px-4 lg:px-6 py-6" v-else>
-        <div v-if="auctions.length === 0" class="text-center text-slate-600 py-10">
-          Chưa có phiên nào bạn đã thanh toán tiền cọc.
-        </div>
-
-        <div v-else class="space-y-4">
-          <div
-            v-for="a in auctions"
-            :key="a.maphiendg"
-            class="fade-in group relative rounded-[22px] ring-1 ring-slate-200 bg-white overflow-hidden shadow-sm flex gap-4 p-4 hover:shadow-md transition"
-          >
-            <!-- Image -->
-            <div
-              class="w-44 md:w-56 h-32 md:h-36 rounded-xl bg-white ring-1 ring-slate-100 overflow-hidden relative flex items-center justify-center"
-            >
-              <div v-if="!firstImage(a)" class="text-slate-400 text-sm">No image</div>
-              <img
-                v-else
-                :src="imageUrl(firstImage(a))"
-                :alt="a.sanPham?.tensp || 'Ảnh sản phẩm'"
-                class="w-full h-full object-cover"
-                loading="lazy"
-              />
-              <div
-                class="absolute bottom-2 right-2 bg-white/90 backdrop-blur rounded-lg px-2 py-1 ring-1 ring-slate-200 text-[11px] text-slate-700 flex items-center gap-1"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  xml:space="preserve"
-                  width="13"
-                  height="13"
-                  viewBox="0 0 13 13"
-                  color="#ec003f"
-                  style="
-                    fill-rule: evenodd;
-                    clip-rule: evenodd;
-                    stroke-linejoin: round;
-                    stroke-miterlimit: 2;
-                  "
-                >
-                  <path
-                    d="M7.2 5.6V8a.8.8 0 0 0 .234.566l1.6 1.6a.802.802 0 0 0 1.132-1.132L8.8 7.669V5.6a.8.8 0 1 0-1.6 0"
-                    transform="translate(-1.6 -1.6)"
-                    style="fill: currentcolor"
-                  ></path>
-                  <path
-                    d="M8 3.2a4.8 4.8 0 1 1 0 9.6.8.8 0 1 0 0 1.6A6.4 6.4 0 0 0 14.4 8 6.4 6.4 0 0 0 8 1.6a.8.8 0 1 0 0 1.6"
-                    transform="translate(-1.6 -1.6)"
-                    style="fill: currentcolor"
-                  ></path>
-                  <path
-                    d="M5.2 13.65a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M3.151 11.6a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M2.4 8.8a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M3.151 6a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M5.2 3.95a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6"
-                    transform="translate(-1.6 -1.6)"
-                    style="fill-rule: nonzero; fill: currentcolor"
-                  ></path>
-                </svg>
-                <span class="tabular-nums">{{
-                  shortCountdown(a.thoigianbd, a.thoigiankt)
-                }}</span>
-              </div>
-            </div>
-
-            <!-- Content -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-3">
-                <h3
-                  class="text-[17px] md:text-[18px] font-bold text-slate-900 leading-snug line-clamp-2"
-                >
-                  {{ a.sanPham?.tensp || "Sản phẩm" }}
-                  <span class="ml-2 text-slate-500 text-sm font-normal"
-                    >#{{ a.maphiendg }}</span
-                  >
-                </h3>
-                <span
-                  class="shrink-0 text-[12px] px-2 py-1 rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-200"
-                >
-                  {{ a.trangthai }}
-                </span>
-              </div>
-
-              <div class="grid sm:grid-cols-2 gap-x-8 gap-y-1 mt-2 text-sm">
-                <div class="flex items-center gap-1">
-                  <span class="text-slate-500">Bắt đầu:</span>
-                  <span class="font-semibold text-slate-900">{{
-                    formatDate(a.thoigianbd)
-                  }}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="text-slate-500">Kết thúc:</span>
-                  <span class="font-semibold text-slate-900">{{
-                    formatDate(a.thoigiankt)
-                  }}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="text-slate-500">Giá khởi điểm:</span>
-                  <span class="font-semibold text-sky-700">{{
-                    formatCurrency(a.giakhoidiem)
-                  }}</span>
-                </div>
-              </div>
-
-              <div class="mt-3 flex gap-2 justify-end">
-                <a
-                  class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-                  :href="auctionUrl(a.maphiendg)"
-                  @click.prevent="goAuction(a)"
-                >
-                  Truy cập phiên
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
-    <div
-      class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
-    >
-      <nav
-        class="flex items-center gap-2"
-        role="navigation"
-        aria-label="Pagination"
-      >
-        <button class="page-pill" @click="prevPage" :disabled="!canPrev">
-          ‹ Trước
-        </button>
-        <button
-          v-for="n in numericPages"
-          :key="n"
-          class="page-num"
-          :class="n === currentPage ? 'page-num--active' : ''"
-          @click="goTo(n - 1)"
+    <!-- Header -->
+    <section class="max-w-[1200px] mx-auto px-4 lg:px-6 pt-2">
+      <div class="flex items-end justify-center">
+        <h1
+          class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
         >
-          {{ n }}
-        </button>
-        <button class="page-pill" @click="nextPage" :disabled="!canNext">
-          Sau ›
-        </button>
-      </nav>
+          PHIÊN ĐĂNG KÝ
+        </h1>
+      </div>
+    </section>
+
+    <!-- Layout: Content trái + Sidebar phải -->
+    <div class="max-w-[1300px] mx-auto">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-8">
+        <!-- LEFT: Content -->
+        <div class="flex-1">
+          <!-- Loading / Error -->
+          <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
+            <div class="flex flex-col items-center gap-3">
+              <div id="wifi-loader">
+                <svg class="circle-outer" viewBox="0 0 86 86">
+                  <circle class="back" cx="43" cy="43" r="40"></circle>
+                  <circle class="front" cx="43" cy="43" r="40"></circle>
+                  <circle class="new" cx="43" cy="43" r="40"></circle>
+                </svg>
+                <svg class="circle-middle" viewBox="0 0 60 60">
+                  <circle class="back" cx="30" cy="30" r="27"></circle>
+                  <circle class="front" cx="30" cy="30" r="27"></circle>
+                </svg>
+                <svg class="circle-inner" viewBox="0 0 34 34">
+                  <circle class="back" cx="17" cy="17" r="14"></circle>
+                  <circle class="front" cx="17" cy="17" r="14"></circle>
+                </svg>
+                <div class="text" data-text="Đang tải"></div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="error" class="text-center text-red-500 py-10 font-medium">
+            {{ error }}
+          </div>
+
+          <!-- List -->
+          <section class="px-4 lg:px-6" v-else>
+            <div v-if="auctions.length === 0" class="text-center text-slate-600 py-10">
+              Chưa có phiên nào bạn đã thanh toán tiền cọc
+            </div>
+
+            <div v-else class="space-y-4">
+              <div
+                v-for="a in auctions"
+                :key="a.maphiendg"
+                class="fade-in group relative rounded-[22px] ring-1 ring-slate-200 bg-white overflow-hidden shadow-sm flex gap-4 p-4 hover:shadow-md transition"
+              >
+                <!-- Image -->
+                <div
+                  class="w-44 md:w-56 h-32 md:h-36 rounded-xl bg-white ring-1 ring-slate-100 overflow-hidden relative flex items-center justify-center"
+                >
+                  <div v-if="!firstImage(a)" class="text-slate-400 text-sm">No image</div>
+                  <img
+                    v-else
+                    :src="imageUrl(firstImage(a))"
+                    :alt="a.sanPham?.tensp || 'Ảnh sản phẩm'"
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div
+                    class="absolute bottom-2 right-2 bg-white/90 backdrop-blur rounded-lg px-2 py-1 ring-1 ring-slate-200 text-[11px] text-slate-700 flex items-center gap-1"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      xml:space="preserve"
+                      width="13"
+                      height="13"
+                      viewBox="0 0 13 13"
+                      color="#ec003f"
+                      style="
+                        fill-rule: evenodd;
+                        clip-rule: evenodd;
+                        stroke-linejoin: round;
+                        stroke-miterlimit: 2;
+                      "
+                    >
+                      <path
+                        d="M7.2 5.6V8a.8.8 0 0 0 .234.566l1.6 1.6a.802.802 0 0 0 1.132-1.132L8.8 7.669V5.6a.8.8 0 1 0-1.6 0"
+                        transform="translate(-1.6 -1.6)"
+                        style="fill: currentcolor"
+                      ></path>
+                      <path
+                        d="M8 3.2a4.8 4.8 0 1 1 0 9.6.8.8 0 1 0 0 1.6A6.4 6.4 0 0 0 14.4 8 6.4 6.4 0 0 0 8 1.6a.8.8 0 1 0 0 1.6"
+                        transform="translate(-1.6 -1.6)"
+                        style="fill: currentcolor"
+                      ></path>
+                      <path
+                        d="M5.2 13.65a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M3.151 11.6a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M2.4 8.8a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M3.151 6a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6M5.2 3.95a.8.8 0 1 0 0-1.6.8.8 0 0 0 0 1.6"
+                        transform="translate(-1.6 -1.6)"
+                        style="fill-rule: nonzero; fill: currentcolor"
+                      ></path>
+                    </svg>
+                    <span class="tabular-nums">{{
+                      shortCountdown(a.thoigianbd, a.thoigiankt)
+                    }}</span>
+                  </div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-3">
+                    <h3
+                      class="text-[17px] md:text-[18px] font-bold text-slate-900 leading-snug line-clamp-2"
+                    >
+                      {{ a.sanPham?.tensp || "Sản phẩm" }}
+                      <span class="ml-2 text-slate-500 text-sm font-normal"
+                        >#{{ a.maphiendg }}</span
+                      >
+                    </h3>
+                    <span
+                      class="shrink-0 text-[12px] px-2 py-1 rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-200"
+                    >
+                      {{ a.trangthai }}
+                    </span>
+                  </div>
+
+                  <div class="grid sm:grid-cols-2 gap-x-8 gap-y-1 mt-2 text-sm">
+                    <div class="flex items-center gap-1">
+                      <span class="text-slate-500">Bắt đầu:</span>
+                      <span class="font-semibold text-slate-900">{{
+                        formatDate(a.thoigianbd)
+                      }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="text-slate-500">Kết thúc:</span>
+                      <span class="font-semibold text-slate-900">{{
+                        formatDate(a.thoigiankt)
+                      }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span class="text-slate-500">Giá khởi điểm:</span>
+                      <span class="font-semibold text-sky-700">{{
+                        formatCurrency(a.giakhoidiem)
+                      }}</span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 flex gap-2 justify-end">
+                    <a
+                      class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+                      :href="auctionUrl(a.maphiendg)"
+                      @click.prevent="goAuction(a)"
+                    >
+                      Truy cập phiên
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="px-6 lg:px-8 py-6 lg:py-8">
+            <div
+              class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+            >
+              <nav
+                class="flex items-center gap-2"
+                role="navigation"
+                aria-label="Pagination"
+                style="padding-left: 1px;"
+              >
+                <button class="page-pill" @click="prevPage" :disabled="!canPrev">
+                  ‹ Trước
+                </button>
+                <button
+                  v-for="n in numericPages"
+                  :key="n"
+                  class="page-num"
+                  :class="n === currentPage ? 'page-num--active' : ''"
+                  @click="goTo(n - 1)"
+                >
+                  {{ n }}
+                </button>
+                <button class="page-pill" @click="nextPage" :disabled="!canNext">
+                  Sau ›
+                </button>
+              </nav>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT: AccountSite -->
+        <div class="lg:w-[280px] lg:shrink-0 fade-in">
+          <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
+        </div>
+      </div>
     </div>
-  </section>
-    </main>
   </div>
 </template>
 
@@ -192,6 +204,7 @@ import { ref, onMounted, onUnmounted, onActivated, watch, computed } from "vue";
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
 import { useRouter, useRoute } from "vue-router";
+import AccountSite from "@/components/AccountSite.vue";
 
 defineOptions({ name: "RegisteredSessions" });
 
@@ -199,6 +212,16 @@ const router = useRouter();
 const route = useRoute();
 const API = "http://localhost:8082/api";
 const userStore = useUserStore();
+
+// Computed từ store
+const fullName = computed(() =>
+  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten].filter(Boolean).join(" ")
+);
+
+const emailVerified = computed(() => {
+  const status = (userStore.user?.xacthuctaikhoan || "").toUpperCase();
+  return status === "ACTIVE" || status === "ĐÃ XÁC THỰC";
+});
 
 const auctions = ref([]);
 const loading = ref(true);

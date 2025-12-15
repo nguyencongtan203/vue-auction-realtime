@@ -1,9 +1,10 @@
-<!-- UpdateAuction.vue -->
+
 <template>
+  <!-- UpdateAuction.vue -->
   <!-- Popup -->
   <div
     v-if="visible"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm fade-in"
   >
     <div class="relative z-10 w-full max-w-6xl rounded-lg bg-white p-8 shadow-lg">
       <!-- Header -->
@@ -103,6 +104,15 @@
     </div>
   </div>
 
+  <!-- Popup xác nhận -->
+  <PopupSubmit
+    :visible="showConfirmPopup"
+    :message="confirmMessage"
+    actionType="update"
+    @close="showConfirmPopup = false"
+    @submit="handleConfirmSubmit"
+  />
+
   <!-- Toast -->
   <transition name="slide-fade">
     <div v-if="toastSafe.show" class="fixed top-5 right-5 z-[60]">
@@ -144,7 +154,7 @@
 import { reactive, ref, watch, computed } from "vue";
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
-
+import PopupSubmit from "@/components/PopupSubmit.vue";
 const API = "http://localhost:8082/api";
 const userStore = useUserStore();
 
@@ -183,7 +193,8 @@ const errors = reactive({});
 const submitting = ref(false);
 const toast = ref({ show: false, message: "", type: "info" });
 const formattedValues = reactive({ buocgia: "", tiencoc: "" });
-
+const showConfirmPopup = ref(false);
+const confirmMessage = ref("Bạn có chắc muốn cập nhật phiên đấu giá này?");
 // Computed
 const toastSafe = computed(
   () => toast.value || { show: false, message: "", type: "info" }
@@ -310,19 +321,31 @@ function extractErrorMessage(err) {
 }
 
 const save = async () => {
-  const token = userStore.token;
-  if (!token) return showToast("Vui lòng đăng nhập lại.", "error");
-
   fields.forEach(({ key }) => validateNumber(key));
   validateTimes();
-  if (Object.values(errors).some((e) => e))
-    return showToast("Kiểm tra lại dữ liệu.", "error");
+  if (Object.values(errors).some((e) => e)) {
+    showToast("Kiểm tra lại dữ liệu.", "error");
+    return;
+  }
+
+  confirmMessage.value = "Bạn có chắc muốn cập nhật phiên đấu giá này?";
+  showConfirmPopup.value = true;
+};
+
+const handleConfirmSubmit = async () => {
+  showConfirmPopup.value = false;
+
+  const token = userStore.token;
+  if (!token) {
+    showToast("Vui lòng đăng nhập lại.", "error");
+    return;
+  }
 
   submitting.value = true;
   try {
     const payload = {
-      buocgia: form.buocgia,
-      tiencoc: form.tiencoc,
+      buocgia: form.buocgia.trim(),
+      tiencoc: form.tiencoc.trim(),
       thoigianbd: formatDateTime(form.thoigianbd),
       thoigiankt: formatDateTime(form.thoigiankt),
       thoigianbddk: formatDateTime(form.thoigianbddk),

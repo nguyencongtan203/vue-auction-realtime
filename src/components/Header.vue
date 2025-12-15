@@ -1,5 +1,5 @@
 <template>
-  <!-- Template giữ nguyên như bạn cung cấp -->
+  <!-- Header.vue -->
   <header
     style="box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px"
     class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100"
@@ -466,70 +466,19 @@ import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { useUserStore } from "../stores/userStore";
 import { useAuctionNotificationStore } from "../stores/useAuctionNotificationStore";
+import { useToastStore } from "../stores/useToastStore";
 import { faBell, faCircleUser } from "@fortawesome/free-solid-svg-icons";
 
 const API = "http://localhost:8082/api";
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+const toastStore = useToastStore();
 const authPopup = inject("authPopup");
 
-/* ----- Toast meta theo type ----- */
-const toastMeta = computed(() => {
-  const type = (toast.value.type || "info").toLowerCase();
-  if (type === "success") {
-    return {
-      title: "Thành công!",
-      barBg: "bg-emerald-500",
-      titleColor: "text-emerald-500",
-      iconPaths: [
-        "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z",
-      ],
-    };
-  }
-  if (type === "warning") {
-    return {
-      title: "Cảnh báo!",
-      barBg: "bg-yellow-400",
-      titleColor: "text-yellow-400",
-      iconPaths: [
-        "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
-      ],
-    };
-  }
-  if (type === "error") {
-    return {
-      title: "Lỗi!",
-      barBg: "bg-red-500",
-      titleColor: "text-red-500",
-      iconPaths: [
-        "M20 3.36667C10.8167 3.36667 3.3667 10.8167 3.3667 20C3.3667 29.1833 10.8167 36.6333 20 36.6333C29.1834 36.6333 36.6334 29.1833 36.6334 20C36.6334 10.8167 29.1834 3.36667 20 3.36667ZM19.1334 33.3333V22.9H13.3334L21.6667 6.66667V17.1H27.25L19.1334 33.3333Z",
-      ],
-    };
-  }
-  // info (mặc định)
-  return {
-    title: "Info",
-    barBg: "bg-blue-500",
-    titleColor: "text-blue-500",
-    iconPaths: [
-      "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331Z",
-      "M21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
-    ],
-  }
-});
-
-// Toast
-const toast = ref({
-  show: false,
-  message: "",
-  type: "success",
-});
-
-const showToast = (message, type = "success") => {
-  toast.value = { show: true, message, type };
-  setTimeout(() => (toast.value.show = false), 3000);
-};
+// Sử dụng toast từ store
+const toast = computed(() => toastStore.toast);
+const toastMeta = computed(() => toastStore.toastMeta);
 
 // Notifications
 const auctionNotificationStore = useAuctionNotificationStore();
@@ -660,7 +609,7 @@ function goRegisteredAuctions() {
 
 // Logout
 async function logout() {
-  const token = userStore.token; // Sử dụng token từ store
+  const token = userStore.token;
   try {
     if (token) {
       await axios
@@ -668,18 +617,18 @@ async function logout() {
           headers: { Authorization: `Bearer ${token}` },
         })
         .catch(() => {
-          showToast(
+          toastStore.showToast(
             "Máy chủ phản hồi không ổn định, vẫn tiến hành đăng xuất.",
             "warning"
           );
         });
     }
   } catch {
-    showToast("Có lỗi mạng, vẫn tiếp tục đăng xuất.", "warning");
+    toastStore.showToast("Có lỗi mạng, vẫn tiếp tục đăng xuất.", "warning");
   } finally {
     userStore.logout();
     router.push({ name: "Home" });
-    showToast("Đăng xuất thành công!", "success");
+    toastStore.showToast("Đăng xuất thành công!", "success");
   }
 }
 
@@ -707,7 +656,6 @@ const loadMore = async () => {
 
 const onScroll = (event) => {
   const target = event.target;
-  // Detect scroll gần bottom (50px threshold)
   if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
     loadMore();
   }
@@ -718,7 +666,7 @@ onMounted(async () => {
   const result = await auctionNotificationStore.loadNotifications(0, 5);
   if (result) {
     hasNext.value = !result.last;
-    currentPage.value = 0; // Reset
+    currentPage.value = 0;
   }
 });
 </script>

@@ -1,7 +1,9 @@
-<!-- RegisterProduct.vue -->
 <template>
-  <div class="min-h-screen flex flex-col items-center bg-gray-50 py-10 px-4">
-    <h2 class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10">ĐĂNG KÝ TÀI SẢN</h2>
+  <!-- RegisterProduct.vue -->
+  <div class="min-h-screen bg-gray-50 py-10 px-4">
+    <h2 class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10 text-center">
+      ĐĂNG KÝ TÀI SẢN
+    </h2>
 
     <!-- Toast -->
     <transition name="slide-fade">
@@ -26,134 +28,147 @@
       </div>
     </transition>
 
-    <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">
-      Đang tải dữ liệu...
-    </div>
-
-    <form v-else @submit.prevent="submitProduct" class="w-full max-w-3xl space-y-5">
-      <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Tên sản phẩm</label>
+    <!-- Layout: Content trái + Sidebar phải -->
+    <div class="max-w-[1200px] mx-auto">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-8">
+        <!-- LEFT: Content -->
         <div class="flex-1">
-          <input
-            v-model="product.name"
-            class="input"
-            :class="{ error: errors.name }"
-            placeholder="Nhập tên sản phẩm"
-          />
-          <p v-if="errors.name" class="error-msg">{{ errors.name }}</p>
-        </div>
-      </div>
-
-      <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Danh mục</label>
-        <div class="flex-1">
-          <SoftDropdown
-            v-model="product.category"
-            :options="catOptions"
-            option-value="value"
-            option-label="label"
-            :error="!!errors.category"
-            :errorMessage="errors.category"
-            placeholder="-- Chọn danh mục --"
-          />
-          <p v-if="errors.category" class="error-msg">{{ errors.category }}</p>
-        </div>
-      </div>
-
-      <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Giá mong đợi</label>
-        <div class="flex-1">
-          <input
-            v-model="formattedPrice"
-            type="text"
-            class="input"
-            :class="{ error: errors.expectedPrice }"
-            placeholder="Ví dụ: 10.000"
-            @input="onPriceInput"
-          />
-          <p v-if="errors.expectedPrice" class="error-msg">{{ errors.expectedPrice }}</p>
-        </div>
-      </div>
-
-      <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Tình trạng sản phẩm</label>
-        <div class="flex-1">
-          <input
-            v-model="product.condition"
-            class="input"
-            :class="{ error: errors.condition }"
-            placeholder="Ví dụ: Mới, Cũ, Hàng Like New..."
-          />
-          <p v-if="errors.condition" class="error-msg">{{ errors.condition }}</p>
-        </div>
-      </div>
-
-      <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Thành phố</label>
-        <div class="flex-1">
-          <SoftDropdown
-            v-model="product.city"
-            :options="cityOptions"
-            option-value="value"
-            option-label="label"
-            :error="!!errors.city"
-            :errorMessage="errors.city"
-            placeholder="-- Chọn thành phố --"
-          />
-          <p v-if="errors.city" class="error-msg">{{ errors.city }}</p>
-        </div>
-      </div>
-
-      <div class="form-row fade-in">
-        <label class="w-40 text-sm text-gray-700 font-bold">Ảnh sản phẩm</label>
-        <div class="flex gap-4 flex-wrap">
-          <div
-            v-for="(img, index) in product.images"
-            :key="index"
-            class="w-32 h-32 border border-gray-300 rounded-md flex items-center justify-center bg-gray-100 relative cursor-pointer"
-            @click="removeImage(index)"
-          >
-            <img
-              v-if="img.preview"
-              :src="img.preview"
-              class="object-cover w-full h-full rounded-md"
-              alt=""
-            />
-            <span v-else class="text-gray-400 text-center">Ảnh</span>
-            <button
-              v-if="img.preview"
-              type="button"
-              @click.stop="removeImage(index)"
-              class="absolute top-1 right-1 text-red-500 bg-white rounded-full w-5 h-5 flex items-center justify-center text-sm"
-            >
-              ✕
-            </button>
+          <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">
+            Đang tải dữ liệu...
           </div>
-          <label
-            v-if="product.images.length < 3"
-            class="w-32 h-32 border border-dashed border-gray-400 rounded-md flex items-center justify-center cursor-pointer text-gray-400"
-          >
-            Thêm ảnh
-            <input
-              type="file"
-              class="hidden"
-              accept="image/png, image/jpeg, image/jpg"
-              @change="handleImage"
-            />
-          </label>
-        </div>
-        <p v-if="errors.images" class="error-msg">{{ errors.images }}</p>
-      </div>
 
-      <div class="pt-6 flex justify-end gap-3">
-        <button
-          type="submit"
-          class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-        >
-          Đăng Ký Tài Sản
-        </button>
+          <form v-else @submit.prevent="submitProduct" class="w-full max-w-3xl mx-auto space-y-5">
+            <div class="form-row fade-in">
+              <label class="w-40 text-sm text-gray-700 font-bold">Tên sản phẩm</label>
+              <div class="flex-1">
+                <input
+                  v-model="product.name"
+                  class="input"
+                  :class="{ error: errors.name }"
+                  placeholder="Nhập tên sản phẩm"
+                />
+                <p v-if="errors.name" class="error-msg">{{ errors.name }}</p>
+              </div>
+            </div>
+
+            <div class="form-row fade-in">
+              <label class="w-40 text-sm text-gray-700 font-bold">Danh mục</label>
+              <div class="flex-1">
+                <SoftDropdown
+                  v-model="product.category"
+                  :options="catOptions"
+                  option-value="value"
+                  option-label="label"
+                  :error="!!errors.category"
+                  :errorMessage="errors.category"
+                  placeholder="-- Chọn danh mục --"
+                />
+                <p v-if="errors.category" class="error-msg">{{ errors.category }}</p>
+              </div>
+            </div>
+
+            <div class="form-row fade-in">
+              <label class="w-40 text-sm text-gray-700 font-bold">Giá mong đợi</label>
+              <div class="flex-1">
+                <input
+                  v-model="formattedPrice"
+                  type="text"
+                  class="input"
+                  :class="{ error: errors.expectedPrice }"
+                  placeholder="Ví dụ: 10.000"
+                  @input="onPriceInput"
+                />
+                <p v-if="errors.expectedPrice" class="error-msg">{{ errors.expectedPrice }}</p>
+              </div>
+            </div>
+
+            <div class="form-row fade-in">
+              <label class="w-40 text-sm text-gray-700 font-bold">Tình trạng sản phẩm</label>
+              <div class="flex-1">
+                <input
+                  v-model="product.condition"
+                  class="input"
+                  :class="{ error: errors.condition }"
+                  placeholder="Ví dụ: Mới, Cũ, Hàng Like New..."
+                />
+                <p v-if="errors.condition" class="error-msg">{{ errors.condition }}</p>
+              </div>
+            </div>
+
+            <div class="form-row fade-in">
+              <label class="w-40 text-sm text-gray-700 font-bold">Thành phố</label>
+              <div class="flex-1">
+                <SoftDropdown
+                  v-model="product.city"
+                  :options="cityOptions"
+                  option-value="value"
+                  option-label="label"
+                  :error="!!errors.city"
+                  :errorMessage="errors.city"
+                  placeholder="-- Chọn thành phố --"
+                />
+                <p v-if="errors.city" class="error-msg">{{ errors.city }}</p>
+              </div>
+            </div>
+
+            <div class="form-row fade-in">
+              <label class="w-40 text-sm text-gray-700 font-bold">Ảnh sản phẩm</label>
+              <div class="flex gap-4 flex-wrap">
+                <div
+                  v-for="(img, index) in product.images"
+                  :key="index"
+                  class="w-32 h-32 border border-gray-300 rounded-md flex items-center justify-center bg-gray-100 relative cursor-pointer"
+                  @click="removeImage(index)"
+                >
+                  <img
+                    v-if="img.preview"
+                    :src="img.preview"
+                    class="object-cover w-full h-full rounded-md"
+                    alt=""
+                  />
+                  <span v-else class="text-gray-400 text-center">Ảnh</span>
+                  <button
+                    v-if="img.preview"
+                    type="button"
+                    @click.stop="removeImage(index)"
+                    class="absolute top-1 right-1 text-red-500 bg-white rounded-full w-5 h-5 flex items-center justify-center text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <label
+                  v-if="product.images.length < 3"
+                  class="w-32 h-32 border border-dashed border-gray-400 rounded-md flex items-center justify-center cursor-pointer text-gray-400"
+                >
+                  Thêm ảnh
+                  <input
+                    type="file"
+                    class="hidden"
+                    accept="image/png, image/jpeg, image/jpg"
+                    @change="handleImage"
+                  />
+                </label>
+              </div>
+              <p v-if="errors.images" class="error-msg">{{ errors.images }}</p>
+            </div>
+
+            <div class="pt-6 flex justify-end gap-3">
+              <button
+                type="submit"
+                class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+              >
+                Đăng Ký Tài Sản
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- RIGHT: AccountSite -->
+        <div class="lg:w-[280px] lg:shrink-0 fade-in">
+          <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
+        </div>
       </div>
-    </form>
+    </div>
   </div>
 </template>
 
@@ -162,9 +177,21 @@ import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
 import SoftDropdown from "@/components/SoftDropdown.vue";
+import AccountSite from "@/components/AccountSite.vue";
 
 const API = "http://localhost:8082/api";
 const userStore = useUserStore();
+
+// Computed từ store
+const fullName = computed(() =>
+  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten].filter(Boolean).join(" ")
+);
+
+const emailVerified = computed(() => {
+  const status = (userStore.user?.xacthuctaikhoan || "").toUpperCase();
+  return status === "ACTIVE" || status === "ĐÃ XÁC THỰC";
+});
+
 const product = ref({
   name: "",
   category: "",
@@ -304,8 +331,8 @@ const submitProduct = async () => {
   try {
     // 1) Tạo sản phẩm với chuỗi sạch
     const productPayload = {
-      madm: product.value.category.trim(),
-      matp: product.value.city.trim(),
+      madm: product.value.category,
+      matp: product.value.city,
       tensp: product.value.name.trim(),
       tinhtrangsp: product.value.condition.trim(),
       giamongdoi: product.value.expectedPrice,
@@ -313,9 +340,8 @@ const submitProduct = async () => {
     const res = await axios.post(`${API}/products/create`, productPayload, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    if (res.data?.code !== 200) {
-      showToast(res.data?.message || "Đăng ký tài sản thất bại!", "error");
+    if (res.data.code !== 200) {
+      showToast(res.data.message, "error");
       return;
     }
 
@@ -356,7 +382,12 @@ const submitProduct = async () => {
     window.dispatchEvent(new CustomEvent("products:changed"));
   } catch (err) {
     console.error(err);
-    showToast("Đăng ký tài sản thất bại!", "error");
+    if (err.response && err.response.data) {
+      showToast(err.response.data.message || "Đăng ký tài sản thất bại!", "error");
+    } else {
+      // Lỗi khác (network, etc.)
+      showToast("Đăng ký tài sản thất bại!", "error");
+    }
   }
 };
 

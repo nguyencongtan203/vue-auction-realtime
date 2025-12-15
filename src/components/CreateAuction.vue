@@ -1,9 +1,10 @@
-<!-- CreateAuction.vue -->
+
 <template>
+  <!-- CreateAuction.vue -->
   <!-- Popup -->
   <div
     v-if="visible"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm fade-in"
   >
     <div class="relative z-10 w-full max-w-6xl rounded-lg bg-white p-8 shadow-lg">
       <!-- Header -->

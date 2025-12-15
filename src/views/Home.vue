@@ -497,7 +497,6 @@ async function fetchAuctions() {
     params.append("size", pageSize.value);
     params.append("sort", "thoigianbd,asc");
 
-    // Thêm filter thời gian dựa trên tab
     const { startDateFrom, startDateTo } = getDateRange(activeTab.value);
     params.append("startDateFrom", startDateFrom);
     params.append("startDateTo", startDateTo);

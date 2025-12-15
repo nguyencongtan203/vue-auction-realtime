@@ -3,7 +3,7 @@
   <!-- Popup -->
   <div
     v-if="visible"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm fade-in"
   >
     <div class="relative z-10 w-full max-w-3xl rounded-lg bg-white p-8 shadow-lg">
       <!-- Header -->
@@ -369,12 +369,11 @@ async function handleConfirmSubmit() {
 
   submitting.value = true;
   try {
-    // Xử lý chuỗi sạch: trim đầu cuối và loại bỏ khoảng trắng thừa
     const cleanString = (str) => str.trim().replace(/\s+/g, " ");
 
     const body = {
-      masp: form.masp,
-      madm: form.danhMuc.madm,
+      masp: form.masp.trim(),
+      madm: form.danhMuc.madm.trim(),
       matp: form.thanhPho.matp,
       tensp: cleanString(form.tensp),
       tinhtrangsp: cleanString(form.tinhtrangsp),

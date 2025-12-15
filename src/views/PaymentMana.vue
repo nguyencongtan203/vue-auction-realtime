@@ -1,4 +1,3 @@
-<!-- PaymentMana.vue -->
 <template>
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white fade-in"
@@ -14,353 +13,374 @@
       </div>
     </section>
 
-    <!-- Tabs -->
-    <div
-      class="menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3 max-w-[1024px] mx-auto"
-    >
-      <button
-        :class="{ 'tab-btn--active': activeTab === 'deposit' }"
-        @click="activeTab = 'deposit'"
-        class="tab-btn group"
-      >
-        <span>Thanh toán tiền cọc</span>
-      </button>
-      <button
-        :class="{ 'tab-btn--active': activeTab === 'win' }"
-        @click="activeTab = 'win'"
-        class="tab-btn group"
-      >
-        <span>Thanh toán thắng phiên</span>
-      </button>
-    </div>
-
-    <!-- TAB: TIỀN CỌC -->
-    <div v-if="activeTab === 'deposit'" class="fade-in max-w-[1024px] mx-auto">
-      <!-- Sub-tabs -->
-      <div class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
-        <button
-          :class="{ 'tab-btn--active': activeSubTab === 'UNPAID' }"
-          @click="changeSubTab('UNPAID')"
-          class="sub-tab-btn group"
-        >
-          <span>Chưa thanh toán</span>
-        </button>
-        <button
-          :class="{ 'tab-btn--active': activeSubTab === 'PAID' }"
-          @click="changeSubTab('PAID')"
-          class="sub-tab-btn group"
-        >
-          <span>Đã thanh toán</span>
-        </button>
-        <button
-          :class="{ 'tab-btn--active': activeSubTab === 'REFUNDING' }"
-          @click="changeSubTab('REFUNDING')"
-          class="sub-tab-btn group"
-        >
-          <span>Đang hoàn tiền</span>
-        </button>
-        <button
-          :class="{ 'tab-btn--active': activeSubTab === 'REFUNDED' }"
-          @click="changeSubTab('REFUNDED')"
-          class="sub-tab-btn group"
-        >
-          <span>Đã hoàn tiền</span>
-        </button>
-        <button
-          :class="{ 'tab-btn--active': activeSubTab === 'CANCELLED' }"
-          @click="changeSubTab('CANCELLED')"
-          class="sub-tab-btn group"
-        >
-          <span>Bị hủy</span>
-        </button>
-      </div>
-      <!-- Thêm thanh tìm kiếm ở đây -->
-      <div class="flex justify-end mb-4">
-        <div class="relative flex-1 max-w-[200px] max-w-sm">
-          <input
-            v-model="keywordDeposit"
-            type="text"
-            class="search-input w-full"
-            placeholder="Nhập mã phiếu hoặc mã phiên đấu giá"
-          />
-          <svg
-            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
+    <!-- Layout: Content trái + Sidebar phải -->
+    <div class="max-w-[1300px] mx-auto">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-8">
+        <!-- LEFT: Content -->
+        <div class="flex-1">
+          <!-- Tabs -->
+          <div
+            class="menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3"
           >
-            <path
-              fill-rule="evenodd"
-              d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </div>
-      </div>
-      <!-- Loading / Error -->
-      <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
-        <div class="flex flex-col items-center gap-3">
-          <div id="wifi-loader">
-            <svg class="circle-outer" viewBox="0 0 86 86">
-              <circle class="back" cx="43" cy="43" r="40"></circle>
-              <circle class="front" cx="43" cy="43" r="40"></circle>
-              <circle class="new" cx="43" cy="43" r="40"></circle>
-            </svg>
-            <svg class="circle-middle" viewBox="0 0 60 60">
-              <circle class="back" cx="30" cy="30" r="27"></circle>
-              <circle class="front" cx="30" cy="30" r="27"></circle>
-            </svg>
-            <svg class="circle-inner" viewBox="0 0 34 34">
-              <circle class="back" cx="17" cy="17" r="14"></circle>
-              <circle class="front" cx="17" cy="17" r="14"></circle>
-            </svg>
-            <div class="text" data-text="Đang tải"></div>
+            <button
+              :class="{ 'tab-btn--active': activeTab === 'deposit' }"
+              @click="activeTab = 'deposit'"
+              class="tab-btn group"
+            >
+              <span>Thanh toán tiền cọc</span>
+            </button>
+            <button
+              :class="{ 'tab-btn--active': activeTab === 'win' }"
+              @click="activeTab = 'win'"
+              class="tab-btn group"
+            >
+              <span>Thanh toán thắng phiên</span>
+            </button>
           </div>
-        </div>
-      </div>
 
-      <div v-else-if="error" class="text-center text-red-500 py-10 font-medium">
-        {{ error }}
-      </div>
-
-      <div v-else>
-        <div v-for="item in deposits" :key="item.matc" class="deposit-card group fade-in">
-          <div class="card-main">
-            <div class="card-lines">
-              <div class="line">
-                <span class="label">Mã phiếu</span>
-                <span class="value mono-tag">{{ item.matc }}</span>
-              </div>
-              <div class="line">
-                <span class="label">Phiên đấu giá</span>
-                <span class="value mono-tag">{{ item.phienDauGia.maphiendg }}</span>
-              </div>
-              <div class="line">
-                <span class="label">Tiền cọc</span>
-                <span class="value strong text-sky-700">{{
-                  formatCurrency(item.phienDauGia.tiencoc)
-                }}</span>
-              </div>
-              <div class="line">
-                <span class="label">Hạn thanh toán</span>
-                <span class="value">{{ formatDate(item.thoigianthanhtoan) }}</span>
-              </div>
-              <div class="line">
-                <span class="label">Trạng thái</span>
-                <span :class="['status-pill', softStatus(item.trangthai)]">
-                  {{ item.trangthai }}
-                </span>
+          <!-- TAB: TIỀN CỌC -->
+          <div v-if="activeTab === 'deposit'" class="fade-in">
+            <!-- Sub-tabs -->
+            <div class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
+              <button
+                :class="{ 'tab-btn--active': activeSubTab === 'UNPAID' }"
+                @click="changeSubTab('UNPAID')"
+                class="sub-tab-btn group"
+              >
+                <span>Chưa thanh toán</span>
+              </button>
+              <button
+                :class="{ 'tab-btn--active': activeSubTab === 'PAID' }"
+                @click="changeSubTab('PAID')"
+                class="sub-tab-btn group"
+              >
+                <span>Đã thanh toán</span>
+              </button>
+              <button
+                :class="{ 'tab-btn--active': activeSubTab === 'REFUNDING' }"
+                @click="changeSubTab('REFUNDING')"
+                class="sub-tab-btn group"
+              >
+                <span>Đang hoàn tiền</span>
+              </button>
+              <button
+                :class="{ 'tab-btn--active': activeSubTab === 'REFUNDED' }"
+                @click="changeSubTab('REFUNDED')"
+                class="sub-tab-btn group"
+              >
+                <span>Đã hoàn tiền</span>
+              </button>
+              <button
+                :class="{ 'tab-btn--active': activeSubTab === 'CANCELLED' }"
+                @click="changeSubTab('CANCELLED')"
+                class="sub-tab-btn group"
+              >
+                <span>Bị hủy</span>
+              </button>
+            </div>
+            <!-- Thêm thanh tìm kiếm ở đây -->
+            <div class="flex justify-end mb-4">
+              <div class="relative flex-1 max-w-[200px] max-w-sm">
+                <input
+                  v-model="keywordDeposit"
+                  type="text"
+                  class="search-input w-full"
+                  placeholder="Nhập mã phiếu hoặc mã phiên đấu giá"
+                />
+                <svg
+                  class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
               </div>
             </div>
-          </div>
-
-          <div class="card-actions">
-            <button
-              v-if="item.trangthai === 'Chưa thanh toán' && !payingItems[item.matc]"
-              @click="handlePay(item)"
-              class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-            >
-              Thanh toán
-            </button>
-            <button v-else-if="payingItems[item.matc]" disabled class="soft-btn disabled">
-              Đang chuyển hướng...
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- PHÂN TRANG cho deposit -->
-      <section
-        v-if="depositTotalPages == 1"
-        class="max-w-[1024px] mx-auto px-6 lg:px-8 py-6 lg:py-8"
-      >
-        <div
-          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
-        >
-          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-            <button
-              class="page-pill"
-              @click="prevDepositPage"
-              :disabled="!canPrevDeposit"
-            >
-              ‹ Trước
-            </button>
-            <button
-              v-for="n in numericPagesDeposit"
-              :key="n"
-              class="page-num"
-              :class="n === depositPage ? 'page-num--active' : ''"
-              @click="goToDepositPage(n)"
-            >
-              {{ n }}
-            </button>
-            <button
-              class="page-pill"
-              @click="nextDepositPage"
-              :disabled="!canNextDeposit"
-            >
-              Sau ›
-            </button>
-          </nav>
-        </div>
-      </section>
-    </div>
-
-    <!-- TAB: THẮNG PHIÊN -->
-    <div v-else class="fade-in max-w-[1024px] mx-auto">
-      <!-- Sub-tabs -->
-      <div class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
-        <button
-          :class="{ 'tab-btn--active': activeWinSubTab === 'UNPAID' }"
-          @click="changeWinSubTab('UNPAID')"
-          class="sub-tab-btn group"
-        >
-          <span>Chưa thanh toán</span>
-        </button>
-        <button
-          :class="{ 'tab-btn--active': activeWinSubTab === 'PAID' }"
-          @click="changeWinSubTab('PAID')"
-          class="sub-tab-btn group"
-        >
-          <span>Đã thanh toán</span>
-        </button>
-                <button
-          :class="{ 'tab-btn--active': activeWinSubTab === 'CANCELLED' }"
-          @click="changeWinSubTab('CANCELLED')"
-          class="sub-tab-btn group"
-        >
-          <span>Bị hủy</span>
-        </button>
-      </div>
-      <!-- Thêm thanh tìm kiếm ở đây -->
-      <div class="flex justify-end mb-4">
-        <div class="relative flex-1 max-w-[200px] max-w-sm">
-          <input
-            v-model="keywordWin"
-            type="text"
-            class="search-input w-full"
-            placeholder="Nhập mã phiếu hoặc mã phiên đấu giá"
-          />
-          <svg
-            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </div>
-      </div>
-      <!-- Loading / Error -->
-      <div v-if="winLoading" class="flex justify-center items-center py-12 fade-in">
-        <div class="flex flex-col items-center gap-3">
-          <div id="wifi-loader">
-            <svg class="circle-outer" viewBox="0 0 86 86">
-              <circle class="back" cx="43" cy="43" r="40"></circle>
-              <circle class="front" cx="43" cy="43" r="40"></circle>
-              <circle class="new" cx="43" cy="43" r="40"></circle>
-            </svg>
-            <svg class="circle-middle" viewBox="0 0 60 60">
-              <circle class="back" cx="30" cy="30" r="27"></circle>
-              <circle class="front" cx="30" cy="30" r="27"></circle>
-            </svg>
-            <svg class="circle-inner" viewBox="0 0 34 34">
-              <circle class="back" cx="17" cy="17" r="14"></circle>
-              <circle class="front" cx="17" cy="17" r="14"></circle>
-            </svg>
-            <div class="text" data-text="Đang tải"></div>
-          </div>
-        </div>
-      </div>
-
-      <div v-else-if="winError" class="text-center text-red-500 py-10 font-medium">
-        {{ winError }}
-      </div>
-
-      <div v-else>
-        <div v-for="item in wins" :key="item.matt" class="deposit-card group fade-in">
-          <div class="card-main">
-            <div class="card-lines">
-              <div class="line">
-                <span class="label">Mã phiếu</span>
-                <span class="value mono-tag">{{ item.matt }}</span>
+            <!-- Loading / Error -->
+            <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
+              <div class="flex flex-col items-center gap-3">
+                <div id="wifi-loader">
+                  <svg class="circle-outer" viewBox="0 0 86 86">
+                    <circle class="back" cx="43" cy="43" r="40"></circle>
+                    <circle class="front" cx="43" cy="43" r="40"></circle>
+                    <circle class="new" cx="43" cy="43" r="40"></circle>
+                  </svg>
+                  <svg class="circle-middle" viewBox="0 0 60 60">
+                    <circle class="back" cx="30" cy="30" r="27"></circle>
+                    <circle class="front" cx="30" cy="30" r="27"></circle>
+                  </svg>
+                  <svg class="circle-inner" viewBox="0 0 34 34">
+                    <circle class="back" cx="17" cy="17" r="14"></circle>
+                    <circle class="front" cx="17" cy="17" r="14"></circle>
+                  </svg>
+                  <div class="text" data-text="Đang tải"></div>
+                </div>
               </div>
-              <div class="line">
-                <span class="label">Phiên đấu giá</span>
-                <span class="value mono-tag">{{ item.phienDauGia.maphiendg }}</span>
-              </div>
-              <div class="line">
-                <span class="label">Giá thắng</span>
-                <span class="value strong text-sky-700">
-                  {{ formatCurrency(item.sotien) }}
-                  <small class="notice text-gray-400 text-xs ml-1"
-                    >(Đã trừ tiền cọc)</small
+            </div>
+
+            <div v-else-if="error" class="text-center text-red-500 py-10 font-medium">
+              {{ error }}
+            </div>
+
+            <div v-else-if="!deposits.length" class="text-center text-slate-500 py-10 italic">
+              Không có phiếu thanh toán tiền cọc
+            </div>
+
+            <div v-else>
+              <div v-for="item in deposits" :key="item.matc" class="deposit-card group fade-in">
+                <div class="card-main">
+                  <div class="card-lines">
+                    <div class="line">
+                      <span class="label">Mã phiếu</span>
+                      <span class="value mono-tag">{{ item.matc }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Phiên đấu giá</span>
+                      <span class="value mono-tag">{{ item.phienDauGia.maphiendg }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Tiền cọc</span>
+                      <span class="value strong text-sky-700">{{
+                        formatCurrency(item.phienDauGia.tiencoc)
+                      }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Hạn thanh toán</span>
+                      <span class="value">{{ formatDate(item.thoigianthanhtoan) }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Trạng thái</span>
+                      <span :class="['status-pill', softStatus(item.trangthai)]">
+                        {{ item.trangthai }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <button
+                    v-if="item.trangthai === 'Chưa thanh toán' && !payingItems[item.matc]"
+                    @click="handlePay(item)"
+                    class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
                   >
-                </span>
-              </div>
-              <div class="line">
-                <span class="label">Hạn thanh toán</span>
-                <span class="value">{{ formatDate(item.thoigianthanhtoan) }}</span>
-              </div>
-              <div class="line">
-                <span class="label">Trạng thái</span>
-                <span :class="['status-pill', softStatus(item.trangthai)]">
-                  {{ item.trangthai }}
-                </span>
+                    Thanh toán
+                  </button>
+                  <button v-else-if="payingItems[item.matc]" disabled class="soft-btn disabled">
+                    Đang chuyển hướng...
+                  </button>
+                </div>
               </div>
             </div>
+
+            <!-- PHÂN TRANG cho deposit -->
+            <section
+              v-if="depositTotalPages > 1"
+              class="px-6 lg:px-8 py-6 lg:py-8"
+            >
+              <div
+                class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+              >
+                <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+                  <button
+                    class="page-pill"
+                    @click="prevDepositPage"
+                    :disabled="!canPrevDeposit"
+                  >
+                    ‹ Trước
+                  </button>
+                  <button
+                    v-for="n in numericPagesDeposit"
+                    :key="n"
+                    class="page-num"
+                    :class="n === depositPage ? 'page-num--active' : ''"
+                    @click="goToDepositPage(n)"
+                  >
+                    {{ n }}
+                  </button>
+                  <button
+                    class="page-pill"
+                    @click="nextDepositPage"
+                    :disabled="!canNextDeposit"
+                  >
+                    Sau ›
+                  </button>
+                </nav>
+              </div>
+            </section>
           </div>
 
-          <div class="card-actions">
-            <button
-              v-if="item.trangthai === 'Chưa thanh toán' && !payingWinItems[item.matt]"
-              @click="handleWinPay(item)"
-              class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+          <!-- TAB: THẮNG PHIÊN -->
+          <div v-else class="fade-in">
+            <!-- Sub-tabs -->
+            <div class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
+              <button
+                :class="{ 'tab-btn--active': activeWinSubTab === 'UNPAID' }"
+                @click="changeWinSubTab('UNPAID')"
+                class="sub-tab-btn group"
+              >
+                <span>Chưa thanh toán</span>
+              </button>
+              <button
+                :class="{ 'tab-btn--active': activeWinSubTab === 'PAID' }"
+                @click="changeWinSubTab('PAID')"
+                class="sub-tab-btn group"
+              >
+                <span>Đã thanh toán</span>
+              </button>
+              <button
+                :class="{ 'tab-btn--active': activeWinSubTab === 'CANCELLED' }"
+                @click="changeWinSubTab('CANCELLED')"
+                class="sub-tab-btn group"
+              >
+                <span>Bị hủy</span>
+              </button>
+            </div>
+            <!-- Thêm thanh tìm kiếm ở đây -->
+            <div class="flex justify-end mb-4">
+              <div class="relative flex-1 max-w-[200px] max-w-sm">
+                <input
+                  v-model="keywordWin"
+                  type="text"
+                  class="search-input w-full"
+                  placeholder="Nhập mã phiếu hoặc mã phiên đấu giá"
+                />
+                <svg
+                  class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+            <!-- Loading / Error -->
+            <div v-if="winLoading" class="flex justify-center items-center py-12 fade-in">
+              <div class="flex flex-col items-center gap-3">
+                <div id="wifi-loader">
+                  <svg class="circle-outer" viewBox="0 0 86 86">
+                    <circle class="back" cx="43" cy="43" r="40"></circle>
+                    <circle class="front" cx="43" cy="43" r="40"></circle>
+                    <circle class="new" cx="43" cy="43" r="40"></circle>
+                  </svg>
+                  <svg class="circle-middle" viewBox="0 0 60 60">
+                    <circle class="back" cx="30" cy="30" r="27"></circle>
+                    <circle class="front" cx="30" cy="30" r="27"></circle>
+                  </svg>
+                  <svg class="circle-inner" viewBox="0 0 34 34">
+                    <circle class="back" cx="17" cy="17" r="14"></circle>
+                    <circle class="front" cx="17" cy="17" r="14"></circle>
+                  </svg>
+                  <div class="text" data-text="Đang tải"></div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="winError" class="text-center text-red-500 py-10 font-medium">
+              {{ winError }}
+            </div>
+
+            <div v-else-if="!wins.length" class="text-center text-slate-500 py-10 italic">
+              Không có phiếu thanh toán phiên
+            </div>
+
+            <div v-else>
+              <div v-for="item in wins" :key="item.matt" class="deposit-card group fade-in">
+                <div class="card-main">
+                  <div class="card-lines">
+                    <div class="line">
+                      <span class="label">Mã phiếu</span>
+                      <span class="value mono-tag">{{ item.matt }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Phiên đấu giá</span>
+                      <span class="value mono-tag">{{ item.phienDauGia.maphiendg }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Giá thắng</span>
+                      <span class="value strong text-sky-700">
+                        {{ formatCurrency(item.sotien) }}
+                        <small class="notice text-gray-400 text-xs ml-1"
+                          >(Đã trừ tiền cọc)</small
+                        >
+                      </span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Hạn thanh toán</span>
+                      <span class="value">{{ formatDate(item.thoigianthanhtoan) }}</span>
+                    </div>
+                    <div class="line">
+                      <span class="label">Trạng thái</span>
+                      <span :class="['status-pill', softStatus(item.trangthai)]">
+                        {{ item.trangthai }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <button
+                    v-if="item.trangthai === 'Chưa thanh toán' && !payingWinItems[item.matt]"
+                    @click="handleWinPay(item)"
+                    class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+                  >
+                    Thanh toán
+                  </button>
+                  <button
+                    v-else-if="payingWinItems[item.matt]"
+                    disabled
+                    class="soft-btn disabled"
+                  >
+                    Đang chuyển hướng...
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PHÂN TRANG cho win -->
+            <section
+              v-if="winTotalPages > 1"
+              class="px-6 lg:px-8 py-6 lg:py-8"
             >
-              Thanh toán
-            </button>
-            <button
-              v-else-if="payingWinItems[item.matt]"
-              disabled
-              class="soft-btn disabled"
-            >
-              Đang chuyển hướng...
-            </button>
+              <div
+                class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+              >
+                <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+                  <button class="page-pill" @click="prevWinPage" :disabled="!canPrevWin">
+                    ‹ Trước
+                  </button>
+                  <button
+                    v-for="n in numericPagesWin"
+                    :key="n"
+                    class="page-num"
+                    :class="n === winPage ? 'page-num--active' : ''"
+                    @click="goToWinPage(n)"
+                  >
+                    {{ n }}
+                  </button>
+                  <button class="page-pill" @click="nextWinPage" :disabled="!canNextWin">
+                    Sau ›
+                  </button>
+                </nav>
+              </div>
+            </section>
           </div>
+        </div>
+
+        <!-- RIGHT: AccountSite -->
+        <div class="lg:w-[280px] lg:shrink-0">
+          <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
       </div>
-
-      <!-- PHÂN TRANG cho win -->
-      <section
-        v-if="winTotalPages == 1"
-        class="max-w-[1024px] mx-auto px-6 lg:px-8 py-6 lg:py-8"
-      >
-        <div
-          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
-        >
-          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-            <button class="page-pill" @click="prevWinPage" :disabled="!canPrevWin">
-              ‹ Trước
-            </button>
-            <button
-              v-for="n in numericPagesWin"
-              :key="n"
-              class="page-num"
-              :class="n === winPage ? 'page-num--active' : ''"
-              @click="goToWinPage(n)"
-            >
-              {{ n }}
-            </button>
-            <button class="page-pill" @click="nextWinPage" :disabled="!canNextWin">
-              Sau ›
-            </button>
-          </nav>
-        </div>
-      </section>
     </div>
   </div>
 </template>
@@ -369,11 +389,23 @@
 import { ref, onMounted, onActivated, onUnmounted, watch, computed } from "vue";
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
+import AccountSite from "@/components/AccountSite.vue";
 
 defineOptions({ name: "DepositPayments" });
 
 const API = "http://localhost:8082/api";
 const userStore = useUserStore();
+
+// Computed từ store
+const fullName = computed(() =>
+  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten].filter(Boolean).join(" ")
+);
+
+const emailVerified = computed(() => {
+  const status = (userStore.user?.xacthuctaikhoan || "").toUpperCase();
+  return status === "ACTIVE" || status === "ĐÃ XÁC THỰC";
+});
+
 const deposits = ref([]);
 const wins = ref([]);
 const loading = ref(true);
@@ -539,7 +571,7 @@ async function fetchWins() {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         status: activeWinSubTab.value,
-        keyword: keywordWin.value, // Thêm keyword
+        keyword: keywordWin.value,
         page: winPage.value - 1,
         size: winPageSize.value,
         sort: "thoigianthanhtoan,asc",
@@ -636,9 +668,9 @@ async function handlePay(item) {
     const res = await axios.get(`${API}/deposit-payments/create-order`, {
       params: {
         matc: item.matc,
-        amount: item.phienDauGia.tiencoc || 0,
+        amount: item.phienDauGia.tiencoc,
       },
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.data.code === 200) {
       window.location.href = res.data.result;
@@ -647,7 +679,6 @@ async function handlePay(item) {
       payingItems.value[item.matc] = false;
     }
   } catch (err) {
-    alert("Lỗi khi tạo URL thanh toán: " + err.message);
     payingItems.value[item.matc] = false;
   }
 }
@@ -659,9 +690,9 @@ async function handleWinPay(item) {
     const res = await axios.get(`${API}/payments/create-order`, {
       params: {
         matt: item.matt,
-        amount: item.sotien || 0,
+        amount: item.sotien,
       },
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.data.code === 200) {
       window.location.href = res.data.result;
@@ -670,7 +701,6 @@ async function handleWinPay(item) {
       payingWinItems.value[item.matt] = false;
     }
   } catch (err) {
-    alert("Lỗi khi tạo URL thanh toán: " + err.message);
     payingWinItems.value[item.matt] = false;
   }
 }

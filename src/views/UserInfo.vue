@@ -1,8 +1,8 @@
-<!-- UserInfo.vue -->
 <template>
-  <div class="min-h-screen flex flex-col items-center bg-gray-50 py-10 px-4">
+  <!-- UserInfo.vue -->
+  <div class="min-h-screen bg-gray-50 py-10 px-4">
     <h2
-      class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10"
+      class="text-[22px] md:text-[26px] font-semibold text-slate-900 tracking-tight pb-10 text-center"
     >
       THÔNG TIN TÀI KHOẢN
     </h2>
@@ -30,182 +30,200 @@
       </div>
     </transition>
 
-    <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">
-      Đang tải thông tin người dùng...
-    </div>
+    <!-- Layout: Sidebar trái + Content giữa -->
+    <div class="max-w-[1200px] mx-auto">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-8">
 
-    <div v-else-if="!user" class="text-center text-red-600 py-6 fade-in">
-      Không thể tải thông tin tài khoản.
-    </div>
 
-    <div v-else class="w-full max-w-3xl space-y-5">
-      <!-- Thông tin tổng quát -->
-      <div class="space-y-3 fade-in">
-        <div class="flex items-center gap-4">
-          <label class="w-40 text-sm text-gray-700 font-bold">Họ và tên</label>
-          <p class="text-gray-900 flex-1">{{ fullName }}</p>
-        </div>
+        <!-- RIGHT: content -->
+        <div class="flex-1">
+          <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">
+            Đang tải thông tin người dùng...
+          </div>
 
-                <div class="flex items-center gap-4">
-          <label class="w-40 text-sm font-bold text-gray-700">Email</label>
-          <div class="flex items-center gap-2 flex-1">
-            <p class="text-gray-900">{{ user.email }}</p>
-            <span v-if="!emailVerified" class="text-red-600 text-sm font-medium italic"
-              >(Email chưa được xác thực)</span
-            >
-            <span v-else class="text-emerald-600 text-sm font-medium italic"
-              >(Đã xác thực)</span
-            >
-            <!-- Nút gửi xác thực lại nếu chưa xác thực -->
-            <button
-              v-if="!emailVerified"
-              @click="resendVerifyCode"
-              :disabled="resending"
-              class="ml-2 px-2 py-1 text-white text-xs rounded disabled:bg-gray-400 bg-[#127fcf] hover:bg-[#1992eb] font-semibold btn-flash"
-            >
-              {{ resending ? "Đang gửi..." : "Gửi lại" }}
-            </button>
+          <div v-else-if="!user" class="text-center text-red-600 py-6 fade-in">
+            Không thể tải thông tin tài khoản.
+          </div>
+
+          <!-- Content -->
+          <div v-else class="w-full max-w-3xl mx-auto space-y-5">
+            <!-- Thông tin tổng quát -->
+            <div class="space-y-3 fade-in">
+              <div class="flex items-center gap-4">
+                <label class="w-40 text-sm text-gray-700 font-bold">Họ và tên</label>
+                <p class="text-gray-900 flex-1">{{ fullName }}</p>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <label class="w-40 text-sm font-bold text-gray-700">Email</label>
+                <div class="flex items-center gap-2 flex-1">
+                  <p class="text-gray-900">{{ user.email }}</p>
+                  <span
+                    v-if="!emailVerified"
+                    class="text-red-600 text-sm font-medium italic"
+                    >(Email chưa được xác thực)</span
+                  >
+                  <span v-else class="text-emerald-600 text-sm font-medium italic"
+                    >(Đã xác thực)</span
+                  >
+                  <!-- Nút gửi xác thực lại nếu chưa xác thực -->
+                  <button
+                    v-if="!emailVerified"
+                    @click="resendVerifyCode"
+                    :disabled="resending"
+                    class="ml-2 px-2 py-1 text-white text-xs rounded disabled:bg-gray-400 bg-[#127fcf] hover:bg-[#1992eb] font-semibold btn-flash"
+                  >
+                    {{ resending ? "Đang gửi..." : "Gửi lại" }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <label class="w-40 text-sm font-bold text-gray-700">Mật khẩu</label>
+                <div class="flex items-center gap-3 flex-1">
+                  <p class="text-gray-900 tracking-widest select-none">•••••</p>
+                  <a
+                    href="#"
+                    class="text-sky-600 hover:text-sky-700 text-sm font-medium underline"
+                    @click.prevent="openChangePassword"
+                    >Đổi mật khẩu</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <hr class="border-gray-300 my-4 fade-in" />
+
+            <!-- FORM -->
+            <div class="space-y-4 fade-in">
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold">Họ</label>
+                <div class="flex-1">
+                  <input
+                    v-model="user.ho"
+                    :disabled="!editing"
+                    :class="['input', errors.ho && 'error']"
+                  />
+                  <p v-if="errors.ho" class="error-msg">{{ errors.ho }}</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold">Tên lót</label>
+                <div class="flex-1">
+                  <input
+                    v-model="user.tenlot"
+                    :disabled="!editing"
+                    :class="['input', errors.tenlot && 'error']"
+                  />
+                  <p v-if="errors.tenlot" class="error-msg">{{ errors.tenlot }}</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold">Tên</label>
+                <div class="flex-1">
+                  <input
+                    v-model="user.ten"
+                    :disabled="!editing"
+                    :class="['input', errors.ten && 'error']"
+                  />
+                  <p v-if="errors.ten" class="error-msg">{{ errors.ten }}</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold">Số điện thoại</label>
+                <div class="flex-1">
+                  <input
+                    v-model="user.sdt"
+                    :disabled="!editing"
+                    :class="['input', errors.sdt && 'error']"
+                  />
+                  <p v-if="errors.sdt" class="error-msg">{{ errors.sdt }}</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold">Địa chỉ</label>
+                <div class="flex-1">
+                  <input
+                    v-model="user.diachi"
+                    placeholder="Chưa cập nhật"
+                    :disabled="!editing"
+                    :class="['input', errors.diachi && 'error']"
+                  />
+                  <p v-if="errors.diachi" class="error-msg">{{ errors.diachi }}</p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold"
+                  >Địa chỉ giao hàng</label
+                >
+                <div class="flex-1">
+                  <input
+                    v-model="user.diachigiaohang"
+                    placeholder="Chưa cập nhật"
+                    :disabled="!editing"
+                    :class="['input', errors.diachigiaohang && 'error']"
+                  />
+                  <p v-if="errors.diachigiaohang" class="error-msg">
+                    {{ errors.diachigiaohang }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="w-40 text-sm text-gray-700 font-bold">Thành phố</label>
+                <div class="flex-1">
+                  <SoftDropdown
+                    v-model="user.thanhPho.matp"
+                    :options="cityOptions"
+                    option-value="value"
+                    option-label="label"
+                    :disabled="!editing"
+                    :error="!!errors.matp"
+                    :errorMessage="errors.matp"
+                    placeholder="-- Chưa chọn thành phố --"
+                  />
+                  <p v-if="errors.matp" class="error-msg">{{ errors.matp }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- BTN -->
+            <div class="pt-6 flex justify-end gap-3">
+              <button
+                v-if="!editing"
+                @click="enableEdit"
+                class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+              >
+                Chỉnh Sửa
+              </button>
+              <button
+                v-else
+                @click="saveChanges"
+                class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+                :disabled="saving"
+              >
+                <span v-if="saving">Đang lưu...</span>
+                <span v-else>Lưu Thay Đổi</span>
+              </button>
+              <button
+                v-if="editing"
+                @click="cancelEdit"
+                class="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              >
+                Hủy
+              </button>
+            </div>
           </div>
         </div>
-
-        <div class="flex items-center gap-4">
-          <label class="w-40 text-sm font-bold text-gray-700">Mật khẩu</label>
-          <div class="flex items-center gap-3 flex-1">
-            <p class="text-gray-900 tracking-widest select-none">•••••</p>
-            <a
-              href="#"
-              class="text-sky-600 hover:text-sky-700 text-sm font-medium underline"
-              @click.prevent="openChangePassword"
-              >Đổi mật khẩu</a
-            >
-          </div>
+                <!-- Right: AccountSite -->
+        <div class="lg:w-[280px] lg:shrink-0 fade-in">
+          <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
-      </div>
-
-      <hr class="border-gray-300 my-4 fade-in" />
-
-      <!-- FORM -->
-      <div class="space-y-4 fade-in">
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Họ</label>
-          <div class="flex-1">
-            <input
-              v-model="user.ho"
-              :disabled="!editing"
-              :class="['input', errors.ho && 'error']"
-            />
-            <p v-if="errors.ho" class="error-msg">{{ errors.ho }}</p>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Tên lót</label>
-          <div class="flex-1">
-            <input
-              v-model="user.tenlot"
-              :disabled="!editing"
-              :class="['input', errors.tenlot && 'error']"
-            />
-            <p v-if="errors.tenlot" class="error-msg">{{ errors.tenlot }}</p>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Tên</label>
-          <div class="flex-1">
-            <input
-              v-model="user.ten"
-              :disabled="!editing"
-              :class="['input', errors.ten && 'error']"
-            />
-            <p v-if="errors.ten" class="error-msg">{{ errors.ten }}</p>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Số điện thoại</label>
-          <div class="flex-1">
-            <input
-              v-model="user.sdt"
-              :disabled="!editing"
-              :class="['input', errors.sdt && 'error']"
-            />
-            <p v-if="errors.sdt" class="error-msg">{{ errors.sdt }}</p>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Địa chỉ</label>
-          <div class="flex-1">
-            <input
-              v-model="user.diachi"
-              placeholder="Chưa cập nhật"
-              :disabled="!editing"
-              :class="['input', errors.diachi && 'error']"
-            />
-            <p v-if="errors.diachi" class="error-msg">{{ errors.diachi }}</p>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Địa chỉ giao hàng</label>
-          <div class="flex-1">
-            <input
-              v-model="user.diachigiaohang"
-              placeholder="Chưa cập nhật"
-              :disabled="!editing"
-              :class="['input', errors.diachigiaohang && 'error']"
-            />
-            <p v-if="errors.diachigiaohang" class="error-msg">
-              {{ errors.diachigiaohang }}
-            </p>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label class="w-40 text-sm text-gray-700 font-bold">Thành phố</label>
-          <div class="flex-1">
-            <!-- Dropdown thay cho select -->
-            <SoftDropdown
-              v-model="user.thanhPho.matp"
-              :options="cityOptions"
-              option-value="value"
-              option-label="label"
-              :disabled="!editing"
-              :error="!!errors.matp"
-              :errorMessage="errors.matp"
-              placeholder="-- Chưa chọn thành phố --"
-            />
-            <p v-if="errors.matp" class="error-msg">{{ errors.matp }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- BTN -->
-      <div class="pt-6 flex justify-end gap-3">
-        <button
-          v-if="!editing"
-          @click="enableEdit"
-          class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-        >
-          Chỉnh Sửa
-        </button>
-        <button
-          v-else
-          @click="saveChanges"
-          class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-          :disabled="saving"
-        >
-          <span v-if="saving">Đang lưu...</span>
-          <span v-else>Lưu Thay Đổi</span>
-        </button>
-        <button
-          v-if="editing"
-          @click="cancelEdit"
-          class="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
-        >
-          Hủy
-        </button>
       </div>
     </div>
   </div>
@@ -219,9 +237,9 @@ import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
 import ChangePasswordPopup from "@/components/ChangePasswordPopup.vue";
 import SoftDropdown from "@/components/SoftDropdown.vue";
+import AccountSite from "@/components/AccountSite.vue";
 
 const API = "http://localhost:8082/api";
-
 const userStore = useUserStore();
 
 // Reactive state
@@ -232,13 +250,12 @@ const editing = ref(false);
 const originalData = ref(null);
 const errors = ref({});
 const toast = ref({ show: false, message: "", type: "success" });
-const resending = ref(false); // Loading cho nút gửi xác thực
+const resending = ref(false);
 
 // Computed từ store
 const user = computed(() => userStore.user);
 const loading = computed(() => userStore.loading);
 
-// Các computed khác giữ nguyên
 const toastMeta = computed(() => {
   const type = (toast.value.type || "info").toLowerCase();
   switch (type) {
@@ -295,7 +312,6 @@ const cityOptions = computed(() =>
   (cities.value || []).map((tp) => ({ value: String(tp.matp), label: tp.tentp }))
 );
 
-// Functions
 function showToast(message, type = "success") {
   toast.value = { show: true, message, type };
   setTimeout(() => (toast.value.show = false), 3000);
@@ -339,8 +355,15 @@ function validateUserData() {
   return Object.keys(errors.value).length === 0;
 }
 
+function extractErrorMessage(err) {
+  if (err?.response?.data?.message) return err.response.data.message;
+  if (typeof err?.response?.data === "string") return err.response.data;
+  return err?.message || "Lỗi kết nối đến máy chủ!";
+}
+
 async function saveChanges() {
   if (!validateUserData()) return;
+
   const token = userStore.token;
   if (!token) {
     showToast("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.", "error");
@@ -349,7 +372,6 @@ async function saveChanges() {
 
   saving.value = true;
   try {
-    // Xử lý chuỗi sạch: trim đầu cuối và loại bỏ khoảng trắng thừa
     const cleanString = (str) => str.trim().replace(/\s+/g, " ");
 
     const payload = {
@@ -358,7 +380,7 @@ async function saveChanges() {
       ten: cleanString(user.value.ten),
       diachi: cleanString(user.value.diachi),
       diachigiaohang: cleanString(user.value.diachigiaohang),
-      sdt: user.value.sdt.trim(), // Số điện thoại chỉ trim
+      sdt: user.value.sdt.trim(),
       matp: user.value.thanhPho.matp,
     };
 
@@ -368,8 +390,7 @@ async function saveChanges() {
 
     const { code, result, message } = res.data || {};
     if (code === 200 && result) {
-      // Cập nhật store để đồng bộ
-      await userStore.fetchUser(); // Refresh user từ API
+      await userStore.fetchUser();
       showToast(message || "Cập nhật thông tin thành công!", "success");
       editing.value = false;
       errors.value = {};
@@ -377,17 +398,10 @@ async function saveChanges() {
       showToast(message || "Lưu thất bại, vui lòng thử lại!", "error");
     }
   } catch (err) {
-    const msg = extractErrorMessage(err);
-    showToast(msg, "error");
+    showToast(extractErrorMessage(err), "error");
   } finally {
     saving.value = false;
   }
-}
-
-function extractErrorMessage(err) {
-  if (err?.response?.data?.message) return err.response.data.message;
-  if (typeof err?.response?.data === "string") return err.response.data;
-  return err?.message || "Lỗi kết nối đến máy chủ!";
 }
 
 async function fetchCities() {
@@ -408,7 +422,6 @@ function openChangePassword() {
   changePasswordPopup.value?.open();
 }
 
-// Hàm gửi xác thực lại
 async function resendVerifyCode() {
   const token = userStore.token;
   if (!token) {
@@ -418,9 +431,11 @@ async function resendVerifyCode() {
 
   resending.value = true;
   try {
-    const res = await axios.post(`${API}/users/resend-verify-code`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await axios.post(
+      `${API}/users/resend-verify-code`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
     const { code, message } = res.data || {};
     if (code === 200) {
@@ -429,16 +444,13 @@ async function resendVerifyCode() {
       showToast(message || "Không thể gửi email xác thực!", "error");
     }
   } catch (err) {
-    const msg = extractErrorMessage(err);
-    showToast(msg, "error");
+    showToast(extractErrorMessage(err), "error");
   } finally {
     resending.value = false;
   }
 }
 
-// Lifecycle
 onMounted(async () => {
-  // Load user từ store nếu chưa có
   if (!userStore.user) {
     await userStore.loadUserFromCookies();
   }

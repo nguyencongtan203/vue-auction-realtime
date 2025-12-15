@@ -1,4 +1,5 @@
 <template>
+  <!-- AuthPopup.vue -->
   <div
     v-if="show"
     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]"
@@ -556,33 +557,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Toast -->
-  <transition name="slide-fade">
-    <div v-if="toast.show" class="fixed top-5 right-5 z-50">
-      <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow">
-        <div class="flex items-center justify-center w-12" :class="toastMeta.barBg">
-          <svg
-            class="w-6 h-6 text-white fill-current"
-            viewBox="0 0 40 40"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <template v-for="(d, i) in toastMeta.iconPaths" :key="i">
-              <path :d="d" />
-            </template>
-          </svg>
-        </div>
-        <div class="px-4 py-2 -mx-3">
-          <div class="mx-3">
-            <span class="font-semibold" :class="toastMeta.titleColor">{{
-              toastMeta.title
-            }}</span>
-            <p class="text-sm text-gray-600">{{ toast.message }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </transition>
 </template>
 
 <script setup>
@@ -591,6 +565,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../stores/userStore";
+import { useToastStore } from "../stores/useToastStore";
 
 const API = "http://localhost:8082/api";
 
@@ -621,54 +596,9 @@ const showPassword = ref(false);
 const loading = ref(false);
 const error = ref("");
 
-const toast = ref({ show: false, message: "", type: "success" });
 const router = useRouter();
 const userStore = useUserStore();
-
-/* ----- Toast meta theo type ----- */
-const toastMeta = computed(() => {
-  const type = (toast.value.type || "info").toLowerCase();
-  if (type === "success") {
-    return {
-      title: "Thành công!",
-      barBg: "bg-emerald-500",
-      titleColor: "text-emerald-500",
-      iconPaths: [
-        "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z",
-      ],
-    };
-  }
-  if (type === "warning") {
-    return {
-      title: "Cảnh báo!",
-      barBg: "bg-yellow-400",
-      titleColor: "text-yellow-400",
-      iconPaths: [
-        "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
-      ],
-    };
-  }
-  if (type === "error") {
-    return {
-      title: "Lỗi!",
-      barBg: "bg-red-500",
-      titleColor: "text-red-500",
-      iconPaths: [
-        "M20 3.36667C10.8167 3.36667 3.3667 10.8167 3.3667 20C3.3667 29.1833 10.8167 36.6333 20 36.6333C29.1834 36.6333 36.6334 29.1833 36.6334 20C36.6334 10.8167 29.1834 3.36667 20 3.36667ZM19.1334 33.3333V22.9H13.3334L21.6667 6.66667V17.1H27.25L19.1334 33.3333Z",
-      ],
-    };
-  }
-  // info (mặc định)
-  return {
-    title: "Info",
-    barBg: "bg-blue-500",
-    titleColor: "text-blue-500",
-    iconPaths: [
-      "M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331Z",
-      "M21.6667 28.3333H18.3334V25H21.6667V28.3333ZM21.6667 21.6666H18.3334V11.6666H21.6667V21.6666Z",
-    ],
-  };
-});
+const toastStore = useToastStore();
 
 const togglePassword = () => (showPassword.value = !showPassword.value);
 
@@ -710,20 +640,13 @@ function switchMode(next) {
   );
 }
 
-function showToast(message, type = "success") {
-  toast.value = { show: true, message, type };
-  setTimeout(() => (toast.value.show = false), 3000);
-}
-
 function extractErrorMessage(err) {
-  // Ưu tiên message từ BE (ApiResponse.message)
   if (err?.response?.data?.message) return err.response.data.message;
-  // Nếu BE trả text/plain
   if (typeof err?.response?.data === "string") return err.response.data;
   return err?.message || "Lỗi kết nối đến máy chủ!";
 }
 
-/* ===== LOGIN (chuẩn hoá theo BE) ===== */
+// login
 const handleLogin = async () => {
   error.value = "";
   loading.value = true;
@@ -733,35 +656,29 @@ const handleLogin = async () => {
       matkhau: password.value.trim(),
     });
 
-    // Chuẩn BE: thành công → HTTP 200 + { code:200, result: "<token>" }
     const { code, result, message } = res.data || {};
     if (code === 200 && result) {
       const token = result;
       Cookies.set("jwt_token", token);
       userStore.setToken(token);
-
-      // Lấy thông tin user từ /auth/me (chuẩn BE: code=200, result=user)
       await userStore.fetchUser();
-
-      showToast(message || "Đăng nhập thành công!", "success");
+      toastStore.showToast(message || "Đăng nhập thành công!", "success");
       close();
       router.push("/home");
     } else {
-      // Trường hợp hiếm (BE trả 200 nhưng code != 200)
       error.value = message || "Đăng nhập thất bại!";
-      showToast(error.value, "error");
+      toastStore.showToast(error.value, "error");
     }
   } catch (err) {
-    // Chuẩn BE: lỗi xác thực sẽ về HTTP 4xx + { code, message }
     const msg = extractErrorMessage(err);
     error.value = msg;
-    showToast(msg, "error");
+    toastStore.showToast(msg, "error");
   } finally {
     loading.value = false;
   }
 };
 
-/* ===== REGISTER (chuẩn hoá theo BE) ===== */
+// register
 const handleRegister = async () => {
   error.value = "";
   if (registerPassword.value !== registerConfirm.value) {
@@ -786,7 +703,7 @@ const handleRegister = async () => {
 
     const { code, message } = res.data || {};
     if (code === 200) {
-      showToast(
+      toastStore.showToast(
         message || "Tạo tài khoản thành công! Vui lòng kiểm tra email để xác thực.",
         "success"
       );
@@ -801,12 +718,12 @@ const handleRegister = async () => {
       switchMode("login");
     } else {
       error.value = res.data?.message || "Đăng ký thất bại!";
-      showToast(error.value, "error");
+      toastStore.showToast(error.value, "error");
     }
   } catch (err) {
     const msg = extractErrorMessage(err);
     error.value = msg;
-    showToast(msg, "error");
+    toastStore.showToast(msg, "error");
   } finally {
     loading.value = false;
   }
@@ -814,7 +731,7 @@ const handleRegister = async () => {
 
 function handleForgotPassword(e) {
   e?.preventDefault?.();
-  showToast("Tính năng Quên mật khẩu sẽ sớm có.", "info");
+  toastStore.showToast("Tính năng Quên mật khẩu sẽ sớm có.", "info");
 }
 
 /* ===== PANEL CLASSES & DISABLED ===== */
@@ -834,5 +751,4 @@ defineExpose({ open, close });
 
 <style scoped>
 @import "@/assets/styles/auth.css";
-@import "@/assets/styles/toast.css";
 </style>

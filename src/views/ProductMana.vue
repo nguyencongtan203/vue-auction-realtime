@@ -1,4 +1,3 @@
-<!-- ProductMana.vue -->
 <template>
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white"
@@ -13,274 +12,344 @@
       </div>
     </section>
 
-    <!-- Tabs with search -->
-    <div class="max-w-[1400px] mx-auto flex justify-between items-center gap-3 mb-6 pb-1">
-      <!-- Tabs (justify-start) -->
-      <div class="flex flex-wrap gap-3">
-        <button
-          :class="{ 'tab-btn--active': activeTab === 'products' }"
-          @click="activeTab = 'products'"
-          class="tab-btn group"
-        >
-          <span>Sản phẩm đã đăng ký</span>
-        </button>
-        <button
-          :class="{ 'tab-btn--active': activeTab === 'auctions' }"
-          @click="activeTab = 'auctions'"
-          class="tab-btn group"
-        >
-          <span>Phiên đấu giá</span>
-        </button>
-      </div>
-
-      <!-- Search (justify-end) -->
-      <div class="relative flex-1 max-w-[200px] max-w-sm">
-        <input
-          v-model="currentKeyword"
-          type="text"
-          class="search-input w-full"
-          :placeholder="
-            activeTab === 'products'
-              ? 'Nhập mã/tên sản phẩm'
-              : 'Nhập mã phiên đấu giá'
-          "
-        />
-        <svg
-          class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </div>
-    </div>
-
-    <!-- Danh sách sản phẩm -->
-    <div v-if="activeTab === 'products'" class="max-w-[1400px] mx-auto">
-      <div class="table-shell fade-in">
-        <table class="soft-table">
-          <thead>
-            <tr>
-              <th>Hình ảnh</th>
-              <th>Mã sản phẩm</th>
-              <th>Tên sản phẩm</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="p in filteredProducts" :key="p.masp">
-              <tr class="data-row">
-                <td>
-                  <div class="img-cell h-32">
-                    <template v-if="p.hinhAnh?.length">
-                      <img
-                        :src="getImageUrl(p.hinhAnh[0].tenanh)"
-                        class="product-main-img no-hover"
-                        :alt="p.tensp"
-                      />
-                    </template>
-                    <template v-else>
-                      <span class="placeholder">Không có ảnh</span>
-                    </template>
-                  </div>
-                </td>
-                <td class="text-left font-medium text-slate-700">
-                  <span class="line-clamp-2">{{ p.masp }}</span>
-                </td>
-                <td class="text-left font-medium text-slate-700">
-                  <span class="line-clamp-2">{{ p.tensp }}</span>
-                </td>
-                <td>
-                  <span :class="['status-pill', statusColor(p.trangthai)]">
-                    {{ p.trangthai }}
-                  </span>
-                </td>
-                <td>
-                  <div class="flex flex-wrap gap-2 justify-center">
-                    <template v-if="p.trangthai !== 'Đã duyệt'">
-                      <button class="soft-btn blue" @click="openEdit(p)">
-                        Chỉnh sửa
-                      </button>
-                    </template>
-                    <template v-else>
-                      <button class="soft-btn green" @click="openAuction(p)">
-                        Tạo phiên
-                      </button>
-                    </template>
-                    <button class="soft-btn neutral" @click="toggleDetails(p.masp)">
-                      Chi tiết
-                    </button>
-                    <button class="soft-btn red" @click="confirmDelete(p.masp)">
-                      Xóa
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <!-- Dropdown row -->
-              <tr class="details-row">
-                <td :colspan="5" class="p-0">
-                  <transition name="expand">
-                    <div v-if="openedDetails === p.masp" class="dropdown-panel">
-                      <div class="panel-inner">
-                        <div class="panel-col">
-                          <div class="panel-label">Ảnh khác</div>
-                          <div v-if="p.hinhAnh?.length > 1" class="thumb-grid">
-                            <img
-                              v-for="(img, idx) in p.hinhAnh.slice(1)"
-                              :key="idx"
-                              :src="getImageUrl(img.tenanh)"
-                              class="dropdown-img no-hover"
-                              :alt="`Ảnh phụ ${idx + 1}`"
-                            />
-                          </div>
-                          <div v-else class="placeholder small">Không có ảnh thêm</div>
-                        </div>
-                        <div class="panel-col">
-                          <div class="panel-label">Thành phố</div>
-                          <div class="panel-value">{{ p.thanhPho?.tentp || "N/A" }}</div>
-                        </div>
-                        <div class="panel-col">
-                          <div class="panel-label">Tình trạng</div>
-                          <div class="panel-value">{{ p.tinhtrangsp || "—" }}</div>
-                        </div>
-                        <div class="panel-col">
-                          <div class="panel-label">Danh mục</div>
-                          <div class="panel-value">{{ p.danhMuc?.tendm || "N/A" }}</div>
-                        </div>
-                        <div class="panel-col">
-                          <div class="panel-label">Giá mong đợi</div>
-                          <div class="panel-value">{{ formatPrice(p.giamongdoi) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </transition>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
-      <div v-if="!filteredProducts.length" class="mt-6 text-slate-500 text-center italic">
-        Không có sản phẩm nào.
-      </div>
-
-      <!-- PHÂN TRANG cho products -->
-      <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
-        <div
-          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
-        >
-          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-            <button
-              class="page-pill"
-              @click="prevProductsPage"
-              :disabled="!canPrevProducts"
-            >
-              ‹ Trước
-            </button>
-            <button
-              v-for="n in numericPagesProducts"
-              :key="n"
-              class="page-num"
-              :class="n === productPage ? 'page-num--active' : ''"
-              @click="goToProductsPage(n)"
-            >
-              {{ n }}
-            </button>
-            <button
-              class="page-pill"
-              @click="nextProductsPage"
-              :disabled="!canNextProducts"
-            >
-              Sau ›
-            </button>
-          </nav>
-        </div>
-      </section>
-    </div>
-
-    <!-- Danh sách phiên đấu giá -->
-    <div v-else class="max-w-[1400px] mx-auto">
-      <div class="table-shell fade-in">
-        <table class="soft-table">
-          <thead>
-            <tr>
-              <th>Mã phiên</th>
-              <th>Giá khởi điểm</th>
-              <th>Bước giá</th>
-              <th>Tiền cọc</th>
-              <th>Giá cao nhất</th>
-              <th>Trạng thái</th>
-              <th>Người tham gia</th>
-              <th>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="a in auctions" :key="a.maphiendg" class="data-row">
-              <td class="text-left font-medium text-slate-700">
-                <span class="line-clamp-2">{{ a.maphiendg }}</span>
-              </td>
-              <td>{{ formatPrice(a.giakhoidiem) }}</td>
-              <td>{{ formatPrice(a.buocgia) }}</td>
-              <td>{{ formatPrice(a.tiencoc) }}</td>
-              <td>{{ formatPrice(a.giacaonhatdatduoc) }}</td>
-              <td>
-                <span :class="['status-pill', statusColor(a.trangthai)]">
-                  {{ a.trangthai }}
-                </span>
-              </td>
-              <td>{{ a.slnguoithamgia }}</td>
-              <td>
-                <template v-if="a.trangthai == 'Chờ duyệt'">
-                  <button class="soft-btn blue" @click="openEditedAuction(a)">
-                    Chỉnh sửa
+    <!-- Layout: Content trái + Sidebar phải -->
+    <div class="max-w-[1300px] mx-auto">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-8">
+        <!-- LEFT: Content -->
+        <div class="flex-1">
+          <!-- Danh sách sản phẩm -->
+          <div v-if="activeTab === 'products'">
+            <div class="max-w-[1000px] mx-auto">
+              <!-- Tabs with search -->
+              <div class="flex justify-between items-center gap-3 mb-6 pb-1">
+                <!-- Tabs (justify-start) -->
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    :class="{ 'tab-btn--active': activeTab === 'products' }"
+                    @click="activeTab = 'products'"
+                    class="tab-btn group"
+                  >
+                    <span>Tài sản đã đăng ký</span>
                   </button>
-                </template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-if="!auctions.length" class="mt-6 text-slate-500 text-center italic">
-        Không có phiên đấu giá nào.
-      </div>
+                  <button
+                    :class="{ 'tab-btn--active': activeTab === 'auctions' }"
+                    @click="activeTab = 'auctions'"
+                    class="tab-btn group"
+                  >
+                    <span>Phiên đấu giá</span>
+                  </button>
+                </div>
 
-      <section class="max-w-[1400px] mx-auto px-6 lg:px-8 py-6 lg:py-8">
-        <div
-          class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
-        >
-          <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
-            <button
-              class="page-pill"
-              @click="prevAuctionsPage"
-              :disabled="!canPrevAuctions"
-            >
-              ‹ Trước
-            </button>
-            <button
-              v-for="n in numericPagesAuctions"
-              :key="n"
-              class="page-num"
-              :class="n === auctionPage ? 'page-num--active' : ''"
-              @click="goToAuctionsPage(n)"
-            >
-              {{ n }}
-            </button>
-            <button
-              class="page-pill"
-              @click="nextAuctionsPage"
-              :disabled="!canNextAuctions"
-            >
-              Sau ›
-            </button>
-          </nav>
+                <!-- Search (justify-end) -->
+                <div class="relative flex-1 max-w-[200px] max-w-sm rounded-[22px]">
+                  <input
+                    v-model="currentKeyword"
+                    type="text"
+                    class="search-input w-full"
+                    :placeholder="
+                      activeTab === 'products'
+                        ? 'Nhập mã/tên sản phẩm'
+                        : 'Nhập mã phiên đấu giá'
+                    "
+                  />
+                  <svg
+                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="table-shell fade-in">
+                <table class="soft-table">
+                  <thead>
+                    <tr>
+                      <th>Hình ảnh</th>
+                      <th>Mã tài sản</th>
+                      <th>Tên tài sản</th>
+                      <th>Trạng thái</th>
+                      <th>Tác vụ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-for="p in filteredProducts" :key="p.masp">
+                      <tr class="data-row">
+                        <td>
+                          <div class="img-cell h-32">
+                            <template v-if="p.hinhAnh?.length">
+                              <img
+                                :src="getImageUrl(p.hinhAnh[0].tenanh)"
+                                class="product-main-img no-hover"
+                                :alt="p.tensp"
+                              />
+                            </template>
+                            <template v-else>
+                              <span class="placeholder">Không có ảnh</span>
+                            </template>
+                          </div>
+                        </td>
+                        <td class="text-left font-medium text-slate-700">
+                          <span class="line-clamp-2">{{ p.masp }}</span>
+                        </td>
+                        <td class="text-left font-medium text-slate-700">
+                          <span class="line-clamp-2">{{ p.tensp }}</span>
+                        </td>
+                        <td>
+                          <span :class="['status-pill', statusColor(p.trangthai)]">
+                            {{ p.trangthai }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="flex flex-wrap gap-2 justify-center">
+                            <template v-if="p.trangthai !== 'Đã duyệt'">
+                              <button class="soft-btn blue" @click="openEdit(p)">
+                                Chỉnh sửa
+                              </button>
+                            </template>
+                            <template v-else>
+                              <button class="soft-btn green" @click="openAuction(p)">
+                                Tạo phiên
+                              </button>
+                            </template>
+                            <button class="soft-btn neutral" @click="toggleDetails(p.masp)">
+                              Chi tiết
+                            </button>
+                            <button class="soft-btn red" @click="confirmDeleteProduct(p.masp)">
+                              Xóa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Dropdown row -->
+                      <tr class="details-row">
+                        <td :colspan="5" class="p-0">
+                          <transition name="expand">
+                            <div v-if="openedDetails === p.masp" class="dropdown-panel">
+                              <div class="panel-inner">
+                                <div class="panel-col">
+                                  <div class="panel-label">Ảnh khác</div>
+                                  <div v-if="p.hinhAnh?.length > 1" class="thumb-grid">
+                                    <img
+                                      v-for="(img, idx) in p.hinhAnh.slice(1)"
+                                      :key="idx"
+                                      :src="getImageUrl(img.tenanh)"
+                                      class="dropdown-img no-hover"
+                                      :alt="`Ảnh phụ ${idx + 1}`"
+                                    />
+                                  </div>
+                                  <div v-else class="placeholder small">Không có ảnh thêm</div>
+                                </div>
+                                <div class="panel-col">
+                                  <div class="panel-label">Thành phố</div>
+                                  <div class="panel-value">{{ p.thanhPho?.tentp || "N/A" }}</div>
+                                </div>
+                                <div class="panel-col">
+                                  <div class="panel-label">Tình trạng</div>
+                                  <div class="panel-value">{{ p.tinhtrangsp || "—" }}</div>
+                                </div>
+                                <div class="panel-col">
+                                  <div class="panel-label">Danh mục</div>
+                                  <div class="panel-value">{{ p.danhMuc?.tendm || "N/A" }}</div>
+                                </div>
+                                <div class="panel-col">
+                                  <div class="panel-label">Giá mong đợi</div>
+                                  <div class="panel-value">{{ formatPrice(p.giamongdoi) }}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </transition>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div v-if="!filteredProducts.length" class="mt-6 text-slate-500 text-center italic">
+                Không có sản phẩm nào.
+              </div>
+
+              <!-- PHÂN TRANG cho products -->
+              <section class="px-6 lg:px-8 py-6 lg:py-8">
+                <div
+                  class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+                >
+                  <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination" style="padding-right: 1px;">
+                    <button
+                      class="page-pill"
+                      @click="prevProductsPage"
+                      :disabled="!canPrevProducts"
+                    >
+                    ‹ Trước
+                    </button>
+                    <button
+                      v-for="n in numericPagesProducts"
+                      :key="n"
+                      class="page-num"
+                      :class="n === productPage ? 'page-num--active' : ''"
+                      @click="goToProductsPage(n)"
+                    >
+                      {{ n }}
+                    </button>
+                    <button
+                      class="page-pill"
+                      @click="nextProductsPage"
+                      :disabled="!canNextProducts"
+                    >
+                      Sau ›
+                    </button>
+                  </nav>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <!-- Danh sách phiên đấu giá -->
+          <div v-else>
+            <div class="max-w-[1000px] mx-auto">
+              <!-- Tabs with search -->
+              <div class="flex justify-between items-center gap-3 mb-6 pb-1">
+                <!-- Tabs (justify-start) -->
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    :class="{ 'tab-btn--active': activeTab === 'products' }"
+                    @click="activeTab = 'products'"
+                    class="tab-btn group"
+                  >
+                    <span>Tài sản đã đăng ký</span>
+                  </button>
+                  <button
+                    :class="{ 'tab-btn--active': activeTab === 'auctions' }"
+                    @click="activeTab = 'auctions'"
+                    class="tab-btn group"
+                  >
+                    <span>Phiên đấu giá</span>
+                  </button>
+                </div>
+
+                <!-- Search (justify-end) -->
+                <div class="relative flex-1 max-w-[200px] max-w-sm ">
+                  <input
+                    v-model="currentKeyword"
+                    type="text"
+                    class="search-input w-full"
+                    :placeholder="
+                      activeTab === 'products'
+                        ? 'Nhập mã/tên sản phẩm'
+                        : 'Nhập mã phiên đấu giá'
+                    "
+                  />
+                  <svg
+                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M12.9 14.32a7 7 0 1 1 1.41-1.41l3.38 3.38a1 1 0 0 1-1.42 1.42l-3.37-3.39ZM8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="table-shell fade-in">
+                <table class="soft-table">
+                  <thead>
+                    <tr>
+                      <th>Mã phiên</th>
+                      <th>Giá khởi điểm</th>
+                      <th>Bước giá</th>
+                      <th>Tiền cọc</th>
+                      <th>Giá cao nhất</th>
+                      <th>Trạng thái</th>
+                      <th>Người tham gia</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="a in auctions" :key="a.maphiendg" class="data-row">
+                      <td class="text-left font-medium text-slate-700">
+                        <span class="line-clamp-2">{{ a.maphiendg }}</span>
+                      </td>
+                      <td>{{ formatPrice(a.giakhoidiem) }}</td>
+                      <td>{{ formatPrice(a.buocgia) }}</td>
+                      <td>{{ formatPrice(a.tiencoc) }}</td>
+                      <td>{{ formatPrice(a.giacaonhatdatduoc) }}</td>
+                      <td>
+                        <span :class="['status-pill', statusColor(a.trangthai)]">
+                          {{ a.trangthai }}
+                        </span>
+                      </td>
+                      <td>{{ a.slnguoithamgia }}</td>
+                      <td>
+                        <div class="flex flex-wrap gap-2 justify-center">
+                          <template v-if="a.trangthai == 'Chờ duyệt'">
+                            <button class="soft-btn blue" @click="openEditedAuction(a)">
+                              Chỉnh sửa
+                            </button>
+                            <!-- nút Xóa cho phiên chưa duyệt -->
+                            <button class="soft-btn red" @click="confirmDeleteAuction(a.maphiendg)">
+                              Xóa
+                            </button>
+                          </template>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div v-if="!auctions.length" class="mt-6 text-slate-500 text-center italic">
+                Không có phiên đấu giá nào.
+              </div>
+
+              <section class="px-6 lg:px-8 py-6 lg:py-8">
+                <div
+                  class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
+                >
+                  <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+                    <button
+                      class="page-pill"
+                      @click="prevAuctionsPage"
+                      :disabled="!canPrevAuctions"
+                    >
+                      ‹ Trước
+                    </button>
+                    <button
+                      v-for="n in numericPagesAuctions"
+                      :key="n"
+                      class="page-num"
+                      :class="n === auctionPage ? 'page-num--active' : ''"
+                      @click="goToAuctionsPage(n)"
+                    >
+                      {{ n }}
+                    </button>
+                    <button
+                      class="page-pill"
+                      @click="nextAuctionsPage"
+                      :disabled="!canNextAuctions"
+                    >
+                      Sau ›
+                    </button>
+                  </nav>
+                </div>
+              </section>
+            </div>
+          </div>
         </div>
-      </section>
+
+        <!-- RIGHT: AccountSite -->
+        <div class="lg:w-[280px] lg:shrink-0 fade-in" style="padding-top: 72px;">
+          <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
+        </div>
+      </div>
     </div>
 
     <!-- Popup -->
@@ -302,7 +371,6 @@
       @close="showUpdateAuctionPopup = false"
       @updated="handleAuctionUpdated"
     />
-    <!-- Popup xác nhận xóa -->
     <PopupSubmit
       :visible="showConfirmPopup"
       :message="confirmMessage"
@@ -339,16 +407,27 @@
 <script setup>
 import { ref, reactive, onMounted, onActivated, onUnmounted, computed, watch } from "vue";
 import axios from "axios";
-import { useUserStore } from "@/stores/userStore"; // Import store
+import { useUserStore } from "@/stores/userStore";
 import UpdateProduct from "@/components/UpdateProduct.vue";
 import CreateAuction from "@/components/CreateAuction.vue";
 import UpdateAuction from "@/components/UpdateAuction.vue";
 import PopupSubmit from "@/components/PopupSubmit.vue";
+import AccountSite from "@/components/AccountSite.vue";
 
 defineOptions({ name: "ProductManagement" });
 
 const API = "http://localhost:8082/api";
-const userStore = useUserStore(); // Sử dụng userStore
+const userStore = useUserStore();
+
+// Computed từ store
+const fullName = computed(() =>
+  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten].filter(Boolean).join(" ")
+);
+
+const emailVerified = computed(() => {
+  const status = (userStore.user?.xacthuctaikhoan || "").toUpperCase();
+  return status === "ACTIVE" || status === "ĐÃ XÁC THỰC";
+});
 
 // Reactive state
 const activeTab = ref("products");
@@ -365,17 +444,19 @@ const editedAuction = ref(null);
 const showConfirmPopup = ref(false);
 const confirmMessage = ref("");
 const productToDelete = ref("");
+const auctionToDelete = ref("");
+const deleteTarget = ref("product");
 
 const productPage = ref(1);
-const productPageSize = ref(8);
+const productPageSize = ref(5);
 const productTotalPages = ref(1);
 
 const auctionPage = ref(1);
-const auctionPageSize = ref(8);
+const auctionPageSize = ref(5);
 const auctionTotalPages = ref(1);
 
-const keywordProducts = ref(""); // Keyword cho products
-const keywordAuctions = ref(""); // Keyword cho auctions
+const keywordProducts = ref("");
+const keywordAuctions = ref("");
 
 const toast = reactive({ show: false, message: "", type: "success" });
 
@@ -543,12 +624,12 @@ const handleAuctionUpdated = async () => {
 
 async function fetchProducts() {
   try {
-    const token = userStore.token; // Sử dụng token từ store
+    const token = userStore.token;
     if (!token) return;
     const res = await axios.get(`${API}/products/find-by-user`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
-        keyword: keywordProducts.value, // Thêm keyword
+        keyword: keywordProducts.value,
         page: productPage.value - 1,
         size: productPageSize.value,
         sort: "masp,asc",
@@ -569,12 +650,12 @@ async function fetchProducts() {
 
 async function fetchAuctions() {
   try {
-    const token = userStore.token; // Sử dụng token từ store
+    const token = userStore.token;
     if (!token) return;
     const res = await axios.get(`${API}/auctions/find-by-user`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
-        keyword: keywordAuctions.value, // Thêm keyword
+        keyword: keywordAuctions.value,
         page: auctionPage.value - 1,
         size: auctionPageSize.value,
         sort: "thoigianbd,desc",
@@ -662,23 +743,38 @@ function showToast(msg, type = "success") {
   setTimeout(() => (toast.show = false), 2500);
 }
 
-const confirmDelete = (masp) => {
+const confirmDeleteProduct = (masp) => {
   confirmMessage.value = "Bạn có chắc muốn xóa sản phẩm này?";
   productToDelete.value = masp;
+  auctionToDelete.value = "";
+  deleteTarget.value = "product";
+  showConfirmPopup.value = true;
+};
+
+const confirmDeleteAuction = (maphiendg) => {
+  confirmMessage.value = "Bạn có chắc muốn xóa phiên đấu giá này?";
+  auctionToDelete.value = maphiendg;
+  productToDelete.value = "";
+  deleteTarget.value = "auction";
   showConfirmPopup.value = true;
 };
 
 const handleConfirmDelete = () => {
-  if (productToDelete.value) {
+  if (deleteTarget.value === "product" && productToDelete.value) {
     deleteProduct(productToDelete.value);
-    showConfirmPopup.value = false;
-    productToDelete.value = "";
+  } else if (deleteTarget.value === "auction" && auctionToDelete.value) {
+    deleteAuction(auctionToDelete.value);
   }
+  // Reset and close
+  showConfirmPopup.value = false;
+  productToDelete.value = "";
+  auctionToDelete.value = "";
+  deleteTarget.value = "product";
 };
 
 async function deleteProduct(masp) {
   try {
-    const token = userStore.token; // Sử dụng token từ store
+    const token = userStore.token;
     if (!token) {
       showToast("Không tìm thấy token!", "error");
       return;
@@ -695,6 +791,30 @@ async function deleteProduct(masp) {
     }
   } catch (err) {
     console.error("Lỗi khi xóa sản phẩm:", err);
+    showToast("Lỗi mạng hoặc server!", "error");
+  }
+}
+
+async function deleteAuction(maphiendg) {
+  try {
+    const token = userStore.token;
+    if (!token) {
+      showToast("Không tìm thấy token!", "error");
+      return;
+    }
+    const res = await axios.delete(`${API}/auctions/delete/${maphiendg}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const { code, message } = res.data;
+    if (code === 200) {
+      showToast(message || "Xóa phiên thành công!", "success");
+      await fetchAuctions();
+      if (activeTab.value === "products") await fetchProducts();
+    } else {
+      showToast(message || "Xóa thất bại!", "error");
+    }
+  } catch (err) {
+    console.error("Lỗi khi xóa phiên:", err);
     showToast("Lỗi mạng hoặc server!", "error");
   }
 }
@@ -734,6 +854,6 @@ onUnmounted(() => {
 @import "@/assets/styles/home.css";
 
 .search-input {
-  @apply h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400;
+  @apply h-11 rounded-[12px] border border-slate-300 bg-white px-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:border-sky-400;
 }
 </style>
