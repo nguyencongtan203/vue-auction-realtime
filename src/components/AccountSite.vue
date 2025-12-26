@@ -3,7 +3,7 @@
   <aside class="account-card">
     <!-- Header -->
     <div class="account-head">
-      <div class="account-type">Cá nhân</div>
+      <div class="account-type">Tài Khoản</div>
       <div class="account-name">{{ name }}</div>
       <font-awesome-icon
         :icon="faCircleUser"
@@ -185,7 +185,6 @@ const icons = {
   margin-top: 8px;
   font-weight: 700;
   font-size: 18px;
-  text-transform: lowercase;
   color: #1e293b;
 }
 
@@ -204,17 +203,17 @@ const icons = {
   justify-content: center;
   padding: 6px 16px;
   border-radius: 20px;
-  background: #fee2e2;
+  background: #ffe9e9;
   border: 1px solid #fecaca;
   font-weight: 600;
   font-size: 12px;
-  color: #dc2626;
+  color: #c03636;
 }
 
 .verify-pill--ok {
-  background: #dcfce7;
+  background: #e7f9ef;
+  color: #16823d;
   border-color: #bbf7d0;
-  color: #166534;
 }
 
 .menu {

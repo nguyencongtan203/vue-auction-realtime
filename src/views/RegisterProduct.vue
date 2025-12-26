@@ -37,7 +37,7 @@
             Đang tải dữ liệu...
           </div>
 
-          <form v-else @submit.prevent="submitProduct" class="w-full max-w-3xl mx-auto space-y-5">
+          <form v-else @submit.prevent="submitProduct" class="w-full max-w-3xl ml-auto space-y-5">
             <div class="form-row fade-in">
               <label class="w-40 text-sm text-gray-700 font-bold">Tên sản phẩm</label>
               <div class="flex-1">

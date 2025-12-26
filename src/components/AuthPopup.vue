@@ -196,7 +196,7 @@
                     id="registerTenLot"
                     v-model="registerTenLot"
                     type="text"
-                    placeholder="Văn"
+                    placeholder="Công"
                     class="input"
                     :disabled="disableFields('register')"
                   />
@@ -212,7 +212,7 @@
                     v-model="registerTen"
                     type="text"
                     required
-                    placeholder="An"
+                    placeholder="Tấn"
                     class="input"
                     :disabled="disableFields('register')"
                   />
@@ -260,7 +260,7 @@
                     v-model="registerPassword"
                     type="password"
                     required
-                    placeholder="Tạo mật khẩu"
+                    placeholder="Nhập mật khẩu"
                     class="input"
                     :disabled="disableFields('register')"
                   />

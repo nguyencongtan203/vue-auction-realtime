@@ -1,4 +1,5 @@
 <template>
+  <!-- ProductMana.vue -->
   <div
     class="min-h-screen product-mana px-4 py-8 bg-gradient-to-b from-slate-50 to-white"
   >
@@ -176,7 +177,7 @@
               </div>
 
               <!-- PHÂN TRANG cho products -->
-              <section class="px-6 lg:px-8 py-6 lg:py-8">
+              <section v-if="productTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
                 <div
                   class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
                 >
@@ -310,7 +311,7 @@
                 Không có phiên đấu giá nào.
               </div>
 
-              <section class="px-6 lg:px-8 py-6 lg:py-8">
+              <section v-if="auctionTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
                 <div
                   class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
                 >
@@ -346,7 +347,7 @@
         </div>
 
         <!-- RIGHT: AccountSite -->
-        <div class="lg:w-[280px] lg:shrink-0 fade-in" style="padding-top: 72px;">
+        <div class="lg:w-[280px] lg:shrink-0 fade-in lg:sticky lg:top-10" style="padding-top: 72px;">
           <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
       </div>

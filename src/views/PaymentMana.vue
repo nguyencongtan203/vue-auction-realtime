@@ -19,9 +19,7 @@
         <!-- LEFT: Content -->
         <div class="flex-1">
           <!-- Tabs -->
-          <div
-            class="menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3"
-          >
+          <div class="menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
             <button
               :class="{ 'tab-btn--active': activeTab === 'deposit' }"
               @click="activeTab = 'deposit'"
@@ -41,7 +39,9 @@
           <!-- TAB: TIỀN CỌC -->
           <div v-if="activeTab === 'deposit'" class="fade-in">
             <!-- Sub-tabs -->
-            <div class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
+            <div
+              class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3"
+            >
               <button
                 :class="{ 'tab-btn--active': activeSubTab === 'UNPAID' }"
                 @click="changeSubTab('UNPAID')"
@@ -78,7 +78,7 @@
                 <span>Bị hủy</span>
               </button>
             </div>
-            <!-- Thêm thanh tìm kiếm ở đây -->
+            
             <div class="flex justify-end mb-4">
               <div class="relative flex-1 max-w-[200px] max-w-sm">
                 <input
@@ -127,65 +127,82 @@
               {{ error }}
             </div>
 
-            <div v-else-if="!deposits.length" class="text-center text-slate-500 py-10 italic">
+            <div
+              v-else-if="!deposits.length"
+              class="text-center text-slate-500 py-10 italic"
+            >
               Không có phiếu thanh toán tiền cọc
             </div>
 
             <div v-else>
-              <div v-for="item in deposits" :key="item.matc" class="deposit-card group fade-in">
-                <div class="card-main">
-                  <div class="card-lines">
-                    <div class="line">
-                      <span class="label">Mã phiếu</span>
-                      <span class="value mono-tag">{{ item.matc }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Phiên đấu giá</span>
-                      <span class="value mono-tag">{{ item.phienDauGia.maphiendg }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Tiền cọc</span>
-                      <span class="value strong text-sky-700">{{
-                        formatCurrency(item.phienDauGia.tiencoc)
-                      }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Hạn thanh toán</span>
-                      <span class="value">{{ formatDate(item.thoigianthanhtoan) }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Trạng thái</span>
-                      <span :class="['status-pill', softStatus(item.trangthai)]">
-                        {{ item.trangthai }}
-                      </span>
-                    </div>
+              <div
+                v-for="item in deposits"
+                :key="item.matc"
+                class="momo-invoice-card group fade-in"
+              >
+                <div class="invoice-header">
+                  <div class="invoice-title">
+                    <h3>PHIẾU THANH TOÁN</h3>
+                    <p class="invoice-number">{{ item.matc }}</p>
                   </div>
                 </div>
-
-                <div class="card-actions">
-                  <button
-                    v-if="item.trangthai === 'Chưa thanh toán' && !payingItems[item.matc]"
-                    @click="handlePay(item)"
-                    class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-                  >
-                    Thanh toán
-                  </button>
-                  <button v-else-if="payingItems[item.matc]" disabled class="soft-btn disabled">
-                    Đang chuyển hướng...
-                  </button>
+                <div class="invoice-body">
+                  <div class="invoice-row">
+                    <span class="invoice-label">Phiên đấu giá</span>
+                    <span class="invoice-value">{{ item.phienDauGia.maphiendg }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Tài sản</span>
+                    <span class="invoice-value">{{ item.phienDauGia.sanPham.tensp }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Tiền cọc</span>
+                    <span class="invoice-value amount">{{ formatCurrency(item.phienDauGia.tiencoc) }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Hạn thanh toán</span>
+                    <span class="invoice-value">{{ formatDate(item.thoigianthanhtoan) }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Trạng thái</span>
+                    <span :class="['invoice-status', softStatus(item.trangthai)]">{{ item.trangthai }}</span>
+                  </div>
+                </div>
+                <div class="invoice-footer">
+                  <div class="invoice-total">
+                    <span class="total-label">Tổng tiền</span>
+                    <span class="total-amount">{{ formatCurrency(item.phienDauGia.tiencoc) }}</span>
+                  </div>
+                  <div class="invoice-actions">
+                    <button
+                      v-if="item.trangthai === 'Chưa thanh toán' && !payingItems[item.matc]"
+                      @click="handlePay(item)"
+                      class="btn-flash"
+                    >
+                      Thanh toán
+                    </button>
+                    <button
+                      v-else-if="payingItems[item.matc]"
+                      disabled
+                      class="btn-flash disabled"
+                    >
+                      Đang chuyển hướng...
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- PHÂN TRANG cho deposit -->
-            <section
-              v-if="depositTotalPages > 1"
-              class="px-6 lg:px-8 py-6 lg:py-8"
-            >
+            <section v-if="depositTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
               <div
                 class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
               >
-                <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+                <nav
+                  class="flex items-center gap-2"
+                  role="navigation"
+                  aria-label="Pagination"
+                >
                   <button
                     class="page-pill"
                     @click="prevDepositPage"
@@ -217,7 +234,9 @@
           <!-- TAB: THẮNG PHIÊN -->
           <div v-else class="fade-in">
             <!-- Sub-tabs -->
-            <div class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3">
+            <div
+              class="sub-menu flex flex-wrap gap-3 mb-6 border-b border-slate-200 pb-3"
+            >
               <button
                 :class="{ 'tab-btn--active': activeWinSubTab === 'UNPAID' }"
                 @click="changeWinSubTab('UNPAID')"
@@ -294,67 +313,74 @@
             </div>
 
             <div v-else>
-              <div v-for="item in wins" :key="item.matt" class="deposit-card group fade-in">
-                <div class="card-main">
-                  <div class="card-lines">
-                    <div class="line">
-                      <span class="label">Mã phiếu</span>
-                      <span class="value mono-tag">{{ item.matt }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Phiên đấu giá</span>
-                      <span class="value mono-tag">{{ item.phienDauGia.maphiendg }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Giá thắng</span>
-                      <span class="value strong text-sky-700">
-                        {{ formatCurrency(item.sotien) }}
-                        <small class="notice text-gray-400 text-xs ml-1"
-                          >(Đã trừ tiền cọc)</small
-                        >
-                      </span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Hạn thanh toán</span>
-                      <span class="value">{{ formatDate(item.thoigianthanhtoan) }}</span>
-                    </div>
-                    <div class="line">
-                      <span class="label">Trạng thái</span>
-                      <span :class="['status-pill', softStatus(item.trangthai)]">
-                        {{ item.trangthai }}
-                      </span>
-                    </div>
+              <div
+                v-for="item in wins"
+                :key="item.matt"
+                class="momo-invoice-card group fade-in"
+              >
+                <div class="invoice-header">
+                  <div class="invoice-title">
+                    <h3>PHIẾU THANH TOÁN</h3>
+                    <p class="invoice-number">{{ item.matt }}</p>
                   </div>
                 </div>
-
-                <div class="card-actions">
-                  <button
-                    v-if="item.trangthai === 'Chưa thanh toán' && !payingWinItems[item.matt]"
-                    @click="handleWinPay(item)"
-                    class="inline-flex items-center bg-[#127fcf] hover:bg-[#1992eb] text-white px-4 py-2 rounded-xl font-semibold btn-flash"
-                  >
-                    Thanh toán
-                  </button>
-                  <button
-                    v-else-if="payingWinItems[item.matt]"
-                    disabled
-                    class="soft-btn disabled"
-                  >
-                    Đang chuyển hướng...
-                  </button>
+                <div class="invoice-body">
+                  <div class="invoice-row">
+                    <span class="invoice-label">Phiên đấu giá</span>
+                    <span class="invoice-value">{{ item.phienDauGia.maphiendg }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Tài sản</span>
+                    <span class="invoice-value">{{ item.phienDauGia.sanPham.tensp }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Giá thắng</span>
+                    <span class="invoice-value amount">{{ formatCurrency(item.sotien) }} <small>(Đã trừ tiền cọc)</small></span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Hạn thanh toán</span>
+                    <span class="invoice-value">{{ formatDate(item.thoigianthanhtoan) }}</span>
+                  </div>
+                  <div class="invoice-row">
+                    <span class="invoice-label">Trạng thái</span>
+                    <span :class="['invoice-status', softStatus(item.trangthai)]">{{ item.trangthai }}</span>
+                  </div>
+                </div>
+                <div class="invoice-footer">
+                  <div class="invoice-total">
+                    <span class="total-label">Tổng tiền</span>
+                    <span class="total-amount">{{ formatCurrency(item.sotien) }}</span>
+                  </div>
+                  <div class="invoice-actions">
+                    <button
+                      v-if="item.trangthai === 'Chưa thanh toán' && !payingWinItems[item.matt]"
+                      @click="handleWinPay(item)"
+                      class="btn-flash"
+                    >
+                      Thanh toán
+                    </button>
+                    <button
+                      v-else-if="payingWinItems[item.matt]"
+                      disabled
+                        class="btn-flash disabled"
+                      >
+                      Đang chuyển hướng...
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- PHÂN TRANG cho win -->
-            <section
-              v-if="winTotalPages > 1"
-              class="px-6 lg:px-8 py-6 lg:py-8"
-            >
+            <section v-if="winTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
               <div
                 class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
               >
-                <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+                <nav
+                  class="flex items-center gap-2"
+                  role="navigation"
+                  aria-label="Pagination"
+                >
                   <button class="page-pill" @click="prevWinPage" :disabled="!canPrevWin">
                     ‹ Trước
                   </button>
@@ -377,7 +403,7 @@
         </div>
 
         <!-- RIGHT: AccountSite -->
-        <div class="lg:w-[280px] lg:shrink-0">
+        <div class="lg:w-[280px] lg:shrink-0 fade-in lg:sticky lg:top-10" style="padding-top: 40px;">
           <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
       </div>
@@ -398,7 +424,9 @@ const userStore = useUserStore();
 
 // Computed từ store
 const fullName = computed(() =>
-  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten].filter(Boolean).join(" ")
+  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten]
+    .filter(Boolean)
+    .join(" ")
 );
 
 const emailVerified = computed(() => {
@@ -421,8 +449,8 @@ const payingItems = ref({});
 const payingWinItems = ref({});
 const depositPage = ref(1);
 const winPage = ref(1);
-const depositPageSize = ref(8);
-const winPageSize = ref(8);
+const depositPageSize = ref(4);
+const winPageSize = ref(4);
 const depositTotalPages = ref(1);
 const winTotalPages = ref(1);
 const keywordDeposit = ref("");
@@ -784,108 +812,138 @@ onUnmounted(() => {
   box-shadow: 0 4px 18px -6px rgba(99, 115, 129, 0.25);
 }
 
-.deposit-card {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem;
-  border: 1px solid #e6ebf2;
-  border-radius: 16px;
-  padding: 1rem 1rem 1.1rem 1rem;
-  background: linear-gradient(to bottom, #ffffff, #fdfefe);
-  box-shadow: 0 6px 18px -10px rgba(30, 41, 59, 0.25);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease,
-    background 0.3s ease;
-  margin-bottom: 0.9rem;
-}
-.deposit-card:hover {
-  border-color: #bcd7f8;
-  background: linear-gradient(to bottom, #fefefe, #fdfdfd);
-  box-shadow: 0 8px 25px -8px rgba(30, 41, 59, 0.35);
+.momo-invoice-card {
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
 }
 
-.card-main {
-  display: flex;
-  align-items: center;
-}
-.card-lines {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem 1rem;
-  width: 100%;
-}
-.line {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  min-height: 24px;
+.momo-invoice-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-.label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: #64748b;
+.invoice-header {
+  background: #0f6bae;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.invoice-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.invoice-number {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.invoice-body {
+  padding: 1rem;
+}
+
+.invoice-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.invoice-row:last-child {
+  border-bottom: none;
+}
+
+.invoice-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.invoice-value {
+  font-size: 14px;
+  color: #111827;
   font-weight: 600;
-}
-.value {
-  font-size: 0.85rem;
-  color: #334155;
-}
-.value.strong {
-  font-weight: 700;
+  text-align: right;
 }
 
-.mono-tag {
-  font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.72rem;
-  background: #f1f5f9;
-  color: #455468;
-  padding: 0.25rem 0.45rem;
-  border-radius: 8px;
-  border: 1px solid #e6eaf0;
+.invoice-value.amount {
+  color: #059669;
 }
 
-.card-actions {
-  display: flex;
-  align-items: end;
-  justify-content: end;
-}
-
-.status-pill {
-  padding: 0.28rem 0.55rem;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.4px;
+.invoice-status {
+  padding: .28rem .55rem;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .5px;
   border-radius: 999px;
   display: inline-block;
-  min-width: 82px;
+  min-width: 70px;
   text-align: center;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
 }
-.pill-green {
+
+.invoice-status.pill-green {
   background: #e7f9ef;
   color: #16823d;
 }
-.pill-amber {
+
+.invoice-status.pill-amber {
   background: #fff5d9;
   color: #b86e00;
 }
-.pill-orange {
+
+.invoice-status.pill-orange {
   background: #fed7aa;
   color: #9a3412;
 }
-.pill-blue {
+
+.invoice-status.pill-blue {
   background: #dbeafe;
   color: #1e40af;
 }
-.pill-red {
+
+.invoice-status.pill-red {
   background: #ffe9e9;
   color: #c03636;
 }
-.pill-gray {
+
+.invoice-status.pill-gray {
   background: #f1f5f9;
   color: #64748b;
+}
+
+.invoice-footer {
+  padding: 1rem;
+  background: #f9fafb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invoice-total {
+  display: flex;
+  flex-direction: column;
+}
+
+.total-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.total-amount {
+  font-size: 18px;
+  font-weight: bold;
+  color: #111827;
 }
 
 .pager {
@@ -920,15 +978,16 @@ onUnmounted(() => {
   color: #64748b;
 }
 @media (max-width: 768px) {
-  .deposit-card {
-    grid-template-columns: 1fr;
+  .momo-invoice-card {
+    margin-bottom: 1rem;
+  }
+  .invoice-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  .invoice-footer {
+    flex-direction: column;
     gap: 1rem;
-  }
-  .card-lines {
-    grid-template-columns: 1fr;
-  }
-  .card-actions {
-    justify-content: start;
   }
 }
 

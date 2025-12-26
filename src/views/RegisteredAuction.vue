@@ -46,7 +46,7 @@
           </div>
 
           <!-- List -->
-          <section class="px-4 lg:px-6" v-else>
+          <section v-else>
             <div v-if="auctions.length === 0" class="text-center text-slate-600 py-10">
               Chưa có phiên nào bạn đã thanh toán tiền cọc
             </div>
@@ -160,7 +160,7 @@
               </div>
             </div>
           </section>
-          <section class="px-6 lg:px-8 py-6 lg:py-8">
+          <section v-if="page.totalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
             <div
               class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
             >
@@ -191,7 +191,7 @@
         </div>
 
         <!-- RIGHT: AccountSite -->
-        <div class="lg:w-[280px] lg:shrink-0 fade-in">
+        <div class="lg:w-[280px] lg:shrink-0 fade-in lg:sticky lg:top-10">
           <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
       </div>

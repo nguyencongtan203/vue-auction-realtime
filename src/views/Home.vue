@@ -21,11 +21,18 @@
                     <span
                       class="inline-flex items-center rounded-full bg-white ring-1 ring-amber-200 px-2 py-1 text-[11px] font-bold text-amber-800 tracking-wide"
                     >
-                      HONEST DEALS
+                      An Toàn
                     </span>
-                    <span class="hidden sm:inline text-xs text-black-600"
-                      >Ưu đãi minh bạch</span
+                    <span
+                      class="inline-flex items-center rounded-full bg-white ring-1 ring-amber-200 px-2 py-1 text-[11px] font-bold text-amber-800 tracking-wide"
                     >
+                      Minh Bạch
+                    </span>
+                    <span
+                      class="inline-flex items-center rounded-full bg-white ring-1 ring-amber-200 px-2 py-1 text-[11px] font-bold text-amber-800 tracking-wide"
+                    >
+                      Tiện lợi
+                    </span>
                   </div>
                   <div
                     class="ml-auto inline-flex items-center gap-2 bg-white/90 backdrop-blur rounded-xl px-2.5 py-1.5 ring-1 ring-slate-200"
@@ -45,7 +52,10 @@
                 >
                   Sàn đấu giá trực tuyến
                 </h1>
-                <div class="mt-4 flex flex-wrap items-center gap-3">
+                <p class="text-[14px] md:text-[14px] lg:text-[14px] text-slate-900">
+                  Được xây dựng trên nền tảng minh bạch, dựa trên niềm tin
+                </p>
+                <div class="mt-8 flex flex-wrap items-center gap-3">
                   <a
                     href="#auction-grid"
                     class="inline-flex items-center gap-2 text-white px-4 py-2 rounded-xl shadow-sm bg-[#127fcf] hover:bg-[#1992eb] btn-flash"
@@ -71,10 +81,10 @@
                   Website đấu giá tốt nhất
                 </div>
                 <p class="mt-2 text-white/70 text-sm">
-                  Tham gia ngay các phiên sắp bắt đầu và nhận quà tặng cho người mới.
+                  Theo dõi phiên đấu giá theo thời gian thực. Tham gia ngay các phiên sắp bắt đầu.
                 </p>
                 <button
-                  class="mt-5 w-full bg-white text-slate-900 hover:bg-slate-100 rounded-xl py-2.5 font-semibold"
+                  class="mt-13 w-full bg-white text-slate-900 hover:bg-slate-100 rounded-xl py-2.5 font-semibold"
                 >
                   Xem phiên nổi bật
                 </button>

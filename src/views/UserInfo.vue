@@ -30,11 +30,9 @@
       </div>
     </transition>
 
-    <!-- Layout: Sidebar trái + Content giữa -->
+    <!-- Layout: Sidebar phải + Content giữa -->
     <div class="max-w-[1200px] mx-auto">
       <div class="flex flex-col lg:flex-row lg:items-start gap-8">
-
-
         <!-- RIGHT: content -->
         <div class="flex-1">
           <div v-if="loading" class="text-center text-gray-500 py-6 fade-in">
@@ -46,7 +44,7 @@
           </div>
 
           <!-- Content -->
-          <div v-else class="w-full max-w-3xl mx-auto space-y-5">
+          <div v-else class="w-full max-w-3xl ml-auto space-y-5">
             <!-- Thông tin tổng quát -->
             <div class="space-y-3 fade-in">
               <div class="flex items-center gap-4">
@@ -109,7 +107,7 @@
               </div>
 
               <div class="form-row">
-                <label class="w-40 text-sm text-gray-700 font-bold">Tên lót</label>
+                <label class="w-40 text-sm text-gray-700 font-bold">Tên đệm</label>
                 <div class="flex-1">
                   <input
                     v-model="user.tenlot"
@@ -220,7 +218,7 @@
             </div>
           </div>
         </div>
-                <!-- Right: AccountSite -->
+        <!-- Right: AccountSite -->
         <div class="lg:w-[280px] lg:shrink-0 fade-in">
           <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
@@ -439,7 +437,10 @@ async function resendVerifyCode() {
 
     const { code, message } = res.data || {};
     if (code === 200) {
-      showToast(message || "Đã gửi email xác thực đến tài khoản email của bạn", "success");
+      showToast(
+        message || "Đã gửi email xác thực đến tài khoản email của bạn",
+        "success"
+      );
     } else {
       showToast(message || "Không thể gửi email xác thực!", "error");
     }
