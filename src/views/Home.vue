@@ -463,24 +463,23 @@ function setActiveTab(index) {
   fetchAuctions();
 }
 
-/* API base + images */
 const API = "http://localhost:8082/api";
 const getImageUrl = (tenanh) => `${API}/imgs/${tenanh}`;
 
-/* Image state */
+// Image states
 const imgState = reactive({});
 
-/* Loading/Error */
+// Loading/Error
 const loading = ref(true);
 const error = ref(null);
 
-/* Server-side pagination states */
+// Server-side pagination states
 const page = ref(1);
 const pageSize = ref(8);
 const totalPages = ref(1);
 const pageContent = ref([]);
 
-/* Fetch categories */
+// Fetch categories
 async function fetchCategories() {
   try {
     const res = await axios.get(`${API}/cates/find-all`);
@@ -495,7 +494,7 @@ async function fetchCategories() {
   }
 }
 
-/* Fetch auctions */
+// Fetch auctions
 async function fetchAuctions() {
   try {
     loading.value = true;
@@ -560,7 +559,7 @@ async function fetchAuctions() {
   }
 }
 
-/* Image handlers */
+// Image handlers
 function onImgLoad(id) {
   imgState[id] = "loaded";
 }
@@ -568,7 +567,7 @@ function onImgError(id) {
   imgState[id] = "error";
 }
 
-/* Lifecycle */
+// Lifecycle
 let timer = null;
 onMounted(() => {
   fetchAuctions();
@@ -579,10 +578,10 @@ onUnmounted(() => {
   clearInterval(timer);
 });
 
-/* Filtering trên content của trang hiện tại - Bỏ filter client vì server đã filter */
+// Filtering
 const filteredPageContent = computed(() => pageContent.value);
 
-/* Pagination controls */
+// Pagination controls
 const canPrev = computed(() => page.value > 1);
 const canNext = computed(() => page.value < totalPages.value);
 function goTo(n) {
@@ -616,14 +615,14 @@ const numericPages = computed(() => {
   return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 });
 
-/* Reset về trang 1 khi đổi filter */
+// Reset về trang khi đổi filter
 const searchTimeout = ref(null);
 watch(search, () => {
   if (searchTimeout.value) clearTimeout(searchTimeout.value);
   searchTimeout.value = setTimeout(() => {
     page.value = 1;
     fetchAuctions();
-  }, 700); // Debounce 700ms để tránh gọi API quá nhiều
+  }, 700); // Debounce 700ms
 });
 watch(selectedCate, () => {
   page.value = 1;

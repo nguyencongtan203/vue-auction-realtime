@@ -4,12 +4,14 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 import { useNotificationStore } from './notificationStore'
 import { useAuctionNotificationStore } from './useAuctionNotificationStore'
+
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
     token: Cookies.get('jwt_token') || null,
     sse: null,
     loading: false,
+    numberOfParticipants: 0,
   }),
 
   actions: {
@@ -22,7 +24,11 @@ export const useUserStore = defineStore('user', {
         })
 
         if (res.data.code === 200) {
-          this.user = res.data.result
+          const userData = res.data.result
+          this.user = {
+            ...userData,
+            thanhPho: userData.thanhPho || { matp: '' }
+          }
           this.connectSSE()
           const auctionNotificationStore = useAuctionNotificationStore()
           await auctionNotificationStore.loadNotifications()
@@ -85,13 +91,15 @@ export const useUserStore = defineStore('user', {
       })
 
       eventSource.addEventListener('notification', (e) => {
-      try {
-        const notification = JSON.parse(e.data)
-        auctionNotificationStore.addNotification(notification)
-      } catch (error) {
-        console.error('Lỗi parse notification SSE:', error)
-      }
-    })
+        try {
+          const notification = JSON.parse(e.data)
+          auctionNotificationStore.addNotification(notification)
+        } catch (error) {
+          console.error('Lỗi parse notification SSE:', error)
+        }
+      })
+
+      // Loại bỏ 'number-of-participants' vì xử lý riêng trong AuctionDetail.vue
 
       eventSource.onerror = () => {
         console.warn('SSE connection closed')
@@ -105,6 +113,7 @@ export const useUserStore = defineStore('user', {
     logout() {
       this.user = null
       this.token = null
+      this.numberOfParticipants = 0
       Cookies.remove('jwt_token')
       if (this.sse) {
         this.sse.close()

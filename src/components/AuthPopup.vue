@@ -575,14 +575,14 @@ const switching = ref(false);
 const revealing = ref(false);
 let timers = [];
 
-/* ===== THỜI GIAN HIỆU ỨNG (ms) ===== */
+// animation timings
 const CURTAIN_IN = 100;
 const SLIDE_DURATION = 1000;
 const POST_SLIDE_DELAY = -900;
 const CURTAIN_OUT = 100;
 const TOTAL_SWITCH = CURTAIN_IN + SLIDE_DURATION + POST_SLIDE_DELAY + CURTAIN_OUT;
 
-/* ===== FORM DATA ===== */
+// form fields
 const email = ref("");
 const password = ref("");
 const registerHo = ref("");
@@ -734,7 +734,7 @@ function handleForgotPassword(e) {
   toastStore.showToast("Tính năng Quên mật khẩu sẽ sớm có.", "info");
 }
 
-/* ===== PANEL CLASSES & DISABLED ===== */
+// panel class helpers
 function panelActiveClass(panel) {
   if (switching.value) return "panel-hidden";
   if (revealing.value && mode.value === panel) return "panel-visible";

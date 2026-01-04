@@ -14,16 +14,16 @@
     </section>
 
     <!-- Layout: Content trái + Sidebar phải -->
-    <div class="max-w-[1300px] mx-auto">
+    <div class="max-w-[1500px] mx-auto">
       <div class="flex flex-col lg:flex-row lg:items-start gap-8">
         <!-- LEFT: Content -->
         <div class="flex-1">
           <!-- Danh sách sản phẩm -->
           <div v-if="activeTab === 'products'">
             <div class="max-w-[1000px] mx-auto">
-              <!-- Tabs with search -->
+              <!-- Tabs search -->
               <div class="flex justify-between items-center gap-3 mb-6 pb-1">
-                <!-- Tabs (justify-start) -->
+                <!-- Tabs -->
                 <div class="flex flex-wrap gap-3">
                   <button
                     :class="{ 'tab-btn--active': activeTab === 'products' }"
@@ -109,20 +109,38 @@
                         </td>
                         <td>
                           <div class="flex flex-wrap gap-2 justify-center">
-                            <template v-if="p.trangthai !== 'Đã duyệt'">
-                              <button class="soft-btn blue" @click="openEdit(p)">
+                            <template v-if="p.trangthai === 'Chưa đăng ký'">
+                              <button
+                                class="soft-btn blue"
+                                @click="registerProduct(p.masp)"
+                              >
+                                Đăng ký
+                              </button>
+                            </template>
+                            <template
+                              v-if="
+                                p.trangthai !== 'Đã duyệt' && p.trangthai !== 'Đã hủy'
+                              "
+                            >
+                              <button class="soft-btn yellow" @click="openEdit(p)">
                                 Chỉnh sửa
                               </button>
                             </template>
-                            <template v-else>
+                            <template v-if="p.trangthai === 'Đã duyệt'">
                               <button class="soft-btn green" @click="openAuction(p)">
                                 Tạo phiên
                               </button>
                             </template>
-                            <button class="soft-btn neutral" @click="toggleDetails(p.masp)">
+                            <button
+                              class="soft-btn neutral"
+                              @click="toggleDetails(p.masp)"
+                            >
                               Chi tiết
                             </button>
-                            <button class="soft-btn red" @click="confirmDeleteProduct(p.masp)">
+                            <button
+                              class="soft-btn red"
+                              @click="confirmDeleteProduct(p.masp)"
+                            >
                               Xóa
                             </button>
                           </div>
@@ -145,23 +163,33 @@
                                       :alt="`Ảnh phụ ${idx + 1}`"
                                     />
                                   </div>
-                                  <div v-else class="placeholder small">Không có ảnh thêm</div>
+                                  <div v-else class="placeholder small">
+                                    Không có ảnh thêm
+                                  </div>
                                 </div>
                                 <div class="panel-col">
                                   <div class="panel-label">Thành phố</div>
-                                  <div class="panel-value">{{ p.thanhPho?.tentp || "N/A" }}</div>
+                                  <div class="panel-value">
+                                    {{ p.thanhPho?.tentp || "N/A" }}
+                                  </div>
                                 </div>
                                 <div class="panel-col">
                                   <div class="panel-label">Tình trạng</div>
-                                  <div class="panel-value">{{ p.tinhtrangsp || "—" }}</div>
+                                  <div class="panel-value">
+                                    {{ p.tinhtrangsp || "—" }}
+                                  </div>
                                 </div>
                                 <div class="panel-col">
                                   <div class="panel-label">Danh mục</div>
-                                  <div class="panel-value">{{ p.danhMuc?.tendm || "N/A" }}</div>
+                                  <div class="panel-value">
+                                    {{ p.danhMuc?.tendm || "N/A" }}
+                                  </div>
                                 </div>
                                 <div class="panel-col">
                                   <div class="panel-label">Giá mong đợi</div>
-                                  <div class="panel-value">{{ formatPrice(p.giamongdoi) }}</div>
+                                  <div class="panel-value">
+                                    {{ formatPrice(p.giamongdoi) }}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -172,22 +200,30 @@
                   </tbody>
                 </table>
               </div>
-              <div v-if="!filteredProducts.length" class="mt-6 text-slate-500 text-center italic">
+              <div
+                v-if="!filteredProducts.length"
+                class="mt-6 text-slate-500 text-center italic"
+              >
                 Không có sản phẩm nào.
               </div>
 
-              <!-- PHÂN TRANG cho products -->
+              <!-- PHÂN TRANG products -->
               <section v-if="productTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
                 <div
                   class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
                 >
-                  <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination" style="padding-right: 1px;">
+                  <nav
+                    class="flex items-center gap-2"
+                    role="navigation"
+                    aria-label="Pagination"
+                    style="padding-right: 1px"
+                  >
                     <button
                       class="page-pill"
                       @click="prevProductsPage"
                       :disabled="!canPrevProducts"
                     >
-                    ‹ Trước
+                      ‹ Trước
                     </button>
                     <button
                       v-for="n in numericPagesProducts"
@@ -213,10 +249,10 @@
 
           <!-- Danh sách phiên đấu giá -->
           <div v-else>
-            <div class="max-w-[1000px] mx-auto">
-              <!-- Tabs with search -->
+            <div class="max-w-[1200px] mx-auto">
+              <!-- Tabs search -->
               <div class="flex justify-between items-center gap-3 mb-6 pb-1">
-                <!-- Tabs (justify-start) -->
+                <!-- Tabs -->
                 <div class="flex flex-wrap gap-3">
                   <button
                     :class="{ 'tab-btn--active': activeTab === 'products' }"
@@ -234,8 +270,8 @@
                   </button>
                 </div>
 
-                <!-- Search (justify-end) -->
-                <div class="relative flex-1 max-w-[200px] max-w-sm ">
+                <!-- Search -->
+                <div class="relative flex-1 max-w-[200px] max-w-sm">
                   <input
                     v-model="currentKeyword"
                     type="text"
@@ -272,7 +308,7 @@
                       <th>Giá cao nhất</th>
                       <th>Trạng thái</th>
                       <th>Người tham gia</th>
-                      <th>Hành động</th>
+                      <th>Tác vụ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -292,12 +328,19 @@
                       <td>{{ a.slnguoithamgia }}</td>
                       <td>
                         <div class="flex flex-wrap gap-2 justify-center">
-                          <template v-if="a.trangthai == 'Chờ duyệt'">
+                          <template v-if="a.trangthai === 'Chưa yêu cầu'">
+                            <button class="soft-btn blue" @click="registerAuction(a.maphiendg)">
+                              Đăng ký
+                            </button>
+                          </template>
+                          <template v-if="a.trangthai === 'Chưa yêu cầu' || a.trangthai === 'Chờ duyệt'">
                             <button class="soft-btn blue" @click="openEditedAuction(a)">
                               Chỉnh sửa
                             </button>
-                            <!-- nút Xóa cho phiên chưa duyệt -->
-                            <button class="soft-btn red" @click="confirmDeleteAuction(a.maphiendg)">
+                            <button
+                              class="soft-btn red"
+                              @click="confirmDeleteAuction(a.maphiendg)"
+                            >
                               Xóa
                             </button>
                           </template>
@@ -315,7 +358,11 @@
                 <div
                   class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
                 >
-                  <nav class="flex items-center gap-2" role="navigation" aria-label="Pagination">
+                  <nav
+                    class="flex items-center gap-2"
+                    role="navigation"
+                    aria-label="Pagination"
+                  >
                     <button
                       class="page-pill"
                       @click="prevAuctionsPage"
@@ -347,7 +394,10 @@
         </div>
 
         <!-- RIGHT: AccountSite -->
-        <div class="lg:w-[280px] lg:shrink-0 fade-in lg:sticky lg:top-10" style="padding-top: 72px;">
+        <div
+          class="lg:w-[280px] lg:shrink-0 fade-in lg:sticky lg:top-10"
+          style="padding-top: 72px"
+        >
           <AccountSite :name="fullName || 'Tài khoản'" :verified="emailVerified" />
         </div>
       </div>
@@ -422,7 +472,9 @@ const userStore = useUserStore();
 
 // Computed từ store
 const fullName = computed(() =>
-  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten].filter(Boolean).join(" ")
+  [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten]
+    .filter(Boolean)
+    .join(" ")
 );
 
 const emailVerified = computed(() => {
@@ -472,7 +524,7 @@ function debounce(func, delay) {
 
 // Computed
 const filteredProducts = computed(() =>
-  products.value.filter((p) => ["Đã duyệt", "Chờ duyệt", "Đã hủy"].includes(p.trangthai))
+  products.value.filter((p) => ["Chưa đăng ký", "Chờ duyệt", "Đã duyệt", "Đã hủy"].includes(p.trangthai))
 );
 
 const canPrevProducts = computed(() => productPage.value > 1);
@@ -723,6 +775,8 @@ function statusColor(st) {
       return "pill-green";
     case "Chờ duyệt":
       return "pill-amber";
+    case "Chưa yêu cầu":
+      return "pill-gray";
     case "Đã hủy":
       return "pill-red";
     default:
@@ -773,11 +827,61 @@ const handleConfirmDelete = () => {
   deleteTarget.value = "product";
 };
 
+async function registerProduct(masp) {
+  try {
+    const token = userStore.token;
+    if (!token) {
+      showToast("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.", "error");
+      return;
+    }
+
+    const res = await axios.put(`${API}/products/register`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { masp },
+    });
+
+    if (res.data?.code === 200) {
+      showToast(res.data.message || "Đăng ký tài sản thành công!", "success");
+      await fetchProducts();
+    } else {
+      showToast(res.data.message || "Đăng ký thất bại!", "error");
+    }
+  } catch (err) {
+    console.error("Lỗi khi đăng ký tài sản:", err);
+    showToast("Lỗi kết nối máy chủ hoặc mạng!", "error");
+  }
+}
+
+async function registerAuction(maphiendg) {
+  try {
+    const token = userStore.token;
+    if (!token) {
+      showToast("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.", "error");
+      return;
+    }
+
+    const res = await axios.put(`${API}/auctions/register`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { maphiendg },
+    });
+
+    if (res.data?.code === 200) {
+      showToast(res.data.message || "Yêu cầu tạo phiên thành công!", "success");
+      await fetchAuctions();
+    } else {
+      showToast(res.data.message || "Yêu cầu thất bại!", "error");
+    }
+  } catch (err) {
+    console.error("Lỗi khi yêu cầu tạo phiên:", err);
+    showToast("Lỗi kết nối máy chủ hoặc mạng!", "error");
+  }
+}
+
 async function deleteProduct(masp) {
   try {
     const token = userStore.token;
     if (!token) {
-      showToast("Không tìm thấy token!", "error");
+      showToast("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.", "error");
       return;
     }
     const res = await axios.delete(`${API}/products/delete/${masp}`, {
@@ -800,7 +904,7 @@ async function deleteAuction(maphiendg) {
   try {
     const token = userStore.token;
     if (!token) {
-      showToast("Không tìm thấy token!", "error");
+      showToast("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.", "error");
       return;
     }
     const res = await axios.delete(`${API}/auctions/delete/${maphiendg}`, {

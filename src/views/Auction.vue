@@ -414,7 +414,7 @@ import { useRouter } from "vue-router";
 
 const API = "http://localhost:8082/api";
 
-// Reactive state: State chính của component
+// Reactive state
 const search = ref("");
 const categories = ref([]);
 const cities = ref([]);
@@ -450,7 +450,7 @@ const imgState = reactive({});
 const loading = ref(true);
 const error = ref(null);
 
-// Computed: Các giá trị tính toán dựa trên state
+// Computed
 const filteredPageContent = computed(() => {
   return pageContent.value;
 });
@@ -487,14 +487,14 @@ const dateLabel = computed(() => {
   return "";
 });
 
-// Watch: Theo dõi thay đổi để refetch dữ liệu
+// Watch
 const searchTimeout = ref(null);
 watch(search, () => {
   if (searchTimeout.value) clearTimeout(searchTimeout.value);
   searchTimeout.value = setTimeout(() => {
     page.value = 1;
     fetchAuctions();
-  }, 700); // Debounce 700ms để tránh gọi API quá nhiều
+  }, 700); // Debounce 700ms
 });
 watch(selectedCate, () => {
   page.value = 1;
@@ -591,7 +591,7 @@ const shortCountdown = (startAt, endAt) => {
   return "Đã kết thúc";
 };
 
-// Fetch dữ liệu từ server với filter
+// Fetch
 async function fetchAuctions() {
   try {
     loading.value = true;
@@ -642,7 +642,7 @@ async function fetchAuctions() {
           img.onload = () => (imgState[item.id] = "loaded");
           img.onerror = () => (imgState[item.id] = "error");
           img.src = imgSrc;
-          imgState[item.id] = "loading"; // Tạm thời loading
+          imgState[item.id] = "loading";
         } else {
           imgState[item.id] = "error";
         }
@@ -694,13 +694,13 @@ function nextPage() {
   if (canNext.value) goTo(page.value + 1);
 }
 
-// Dropdown toggles: Mở/đóng dropdown
+// Dropdown toggles
 const toggleCate = () => (showCate.value = !showCate.value);
 const toggleRegion = () => (showRegion.value = !showRegion.value);
 const togglePrice = () => (showPrice.value = !showPrice.value);
 const toggleDate = () => (showDate.value = !showDate.value);
 
-// Select filter: Chọn giá trị lọc và reset trang
+// Select filter
 const selectCate = (cate) => {
   selectedCate.value = cate;
   showCate.value = false;
@@ -735,7 +735,7 @@ function resetToFirstPage() {
   page.value = 1;
 }
 
-// Click ngoài để đóng dropdown
+// Đóng dropdown
 const handleClickOutside = (event) => {
   const path = event.composedPath ? event.composedPath() : [];
   if (
@@ -764,7 +764,7 @@ const handleClickOutside = (event) => {
     showDate.value = false;
 };
 
-// Ảnh: Xử lý load/error ảnh
+// Xử lý ảnh
 function onImgLoad(id) {
   imgState[id] = "loaded";
 }

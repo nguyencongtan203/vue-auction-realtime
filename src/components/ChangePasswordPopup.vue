@@ -6,56 +6,67 @@
     @click.self="close"
   >
     <div
-      class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-gray-200 transition-all"
+      class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 border border-gray-200 transition-all animate-fadeIn"
     >
-      <button
-        @click="close"
-        class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition"
-        aria-label="Đóng"
-      >
-        ✖
+      <button @click="close" class="absolute top-3 right-3 transition point" aria-label="Đóng">
+        <font-awesome-icon :icon="faX" />
       </button>
 
-      <h3 class="text-xl font-semibold text-gray-800 mb-6 text-center">Đổi mật khẩu</h3>
+      <h3 class="text-xl font-bold text-slate-800 text-center mb-6">Đổi mật khẩu</h3>
 
-      <form @submit.prevent="handleChangePassword" class="space-y-4">
+      <form @submit.prevent="handleChangePassword" class="space-y-5">
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu cũ</label>
-            <input
-              type="password"
-              v-model.trim="matkhaucu"
-              class="input"
-              required
-              autocomplete="current-password"
-              :disabled="loading"
-            />
+          <label for="oldPassword" class="block text-sm font-medium text-gray-700 mb-1">
+            Mật khẩu cũ
+          </label>
+          <input
+            id="oldPassword"
+            v-model.trim="matkhaucu"
+            type="password"
+            required
+            placeholder="Nhập mật khẩu cũ"
+            autocomplete="current-password"
+            class="input"
+            :disabled="loading"
+          />
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
-            <input
-              type="password"
-              v-model.trim="matkhaumoi"
-              class="input"
-              required
-              autocomplete="new-password"
-              :disabled="loading"
-            />
+          <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">
+            Mật khẩu mới
+          </label>
+          <input
+            id="newPassword"
+            v-model.trim="matkhaumoi"
+            type="password"
+            required
+            placeholder="Nhập mật khẩu mới"
+            autocomplete="new-password"
+            class="input"
+            :disabled="loading"
+          />
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
-            <input
-              type="password"
-              v-model.trim="xacnhan"
-              class="input"
-              required
-              autocomplete="new-password"
-              :disabled="loading"
-            />
+          <label
+            for="confirmPassword"
+            class="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Xác nhận mật khẩu
+          </label>
+          <input
+            id="confirmPassword"
+            v-model.trim="xacnhan"
+            type="password"
+            required
+            placeholder="Nhập lại mật khẩu mới"
+            autocomplete="new-password"
+            class="input"
+            :disabled="loading"
+          />
         </div>
 
-        <button type="submit" :disabled="loading" class="btn-primary w-full">
+        <button type="submit" :disabled="loading" class="btn-primary btn-flash">
           <span v-if="loading">Đang xử lý...</span>
           <span v-else>Đổi mật khẩu</span>
         </button>
@@ -73,7 +84,7 @@ import Cookies from "js-cookie";
 import { useUserStore } from "../stores/userStore";
 import { useToastStore } from "../stores/useToastStore";
 import { useRouter } from "vue-router";
-
+import { faX } from "@fortawesome/free-solid-svg-icons";
 const router = useRouter();
 const API = "http://localhost:8082/api";
 
@@ -88,7 +99,7 @@ const authPopup = inject("authPopup");
 const userStore = useUserStore();
 const toastStore = useToastStore();
 
-/* ===== Helpers ===== */
+// Helpers
 function open() {
   show.value = true;
   matkhaucu.value = "";
@@ -127,11 +138,9 @@ async function handleChangePassword() {
       matkhaumoi: matkhaumoi.value.trim(),
     };
 
-    const res = await axios.put(
-      `${API}/users/change-password`,
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const res = await axios.put(`${API}/users/change-password`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
     const { code, message } = res.data || {};
     if (code === 200) {
@@ -169,13 +178,53 @@ defineExpose({ open, close });
 <style scoped>
 @import "@/assets/styles/auth.css";
 
-.error-msg {
-  @apply text-sm text-red-600 mt-2;
-}
+/* Áp dụng CSS từ bạn cung cấp để match AuthPopup */
 .input {
-  @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition;
+  @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition text-gray-800 placeholder-gray-400;
+  background-color: #f9fafb;
 }
+.input:disabled {
+  @apply opacity-70 cursor-not-allowed;
+}
+
 .btn-primary {
-  @apply inline-flex justify-center items-center rounded-md bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition;
+  @apply w-full py-2.5 rounded-lg font-semibold text-white shadow-md transition;
+  background-color: #127fcf;
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
+  background-color: #1992eb;
+}
+
+.btn-flash {
+  @apply hover:bg-sky-700 focus:ring-2 focus:ring-sky-500 focus:ring-offset-2;
+}
+
+.error-msg {
+  @apply text-sm text-red-500 text-center font-medium;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+button,
+a {
+  transition: all 0.25s ease;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 </style>

@@ -622,3 +622,4 @@ onUnmounted(() => {
 <style scoped>
 @import "@/assets/styles/auction.css";
 </style>
+Đăng ký tài sản thành công

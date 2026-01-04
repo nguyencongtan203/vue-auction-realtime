@@ -103,7 +103,7 @@
     @submit="handleConfirmSubmit"
   />
 
-  <!-- Toast (giữ đúng template đã chuẩn hoá trước đó) -->
+  <!-- Toast -->
   <transition name="slide-fade">
     <div v-if="toastSafe.show" class="fixed top-5 right-5 z-[60]">
       <div
@@ -347,7 +347,6 @@ const handleConfirmSubmit = async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // { code, message, result }
     const { code, message, result } = res.data || {};
     if (code === 200) {
       showToast(message || "Tạo phiên đấu giá thành công!", "success");

@@ -132,6 +132,16 @@
   background: #dcf6e1;
 }
 
+.soft-btn.yellow {
+  background: #fefce8;
+  border-color: #fde047;
+  color: #92400e;
+}
+
+.soft-btn.yellow:hover {
+  background: #fdf7d7;
+}
+
 /* Status pills */
 .status-pill {
   padding: .28rem .55rem;

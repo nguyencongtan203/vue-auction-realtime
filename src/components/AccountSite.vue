@@ -70,7 +70,7 @@ const routeToKey = {
 
 const activeKey = computed(() => routeToKey[route.name] || "");
 
-/* Menu giống Header */
+// Menu
 const menuItems = [
   { key: "profile", label: "Thông tin cá nhân", icon: "user" },
   { key: "registerProduct", label: "Đăng ký tài sản", icon: "plus" },
@@ -94,7 +94,7 @@ function onSelect(key) {
   }
 }
 
-// ====== Navigation giống Header.vue ======
+// Navigation
 function goUserInfo() {
   router.push({ name: "UserInfo" });
 }

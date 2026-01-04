@@ -11,6 +11,8 @@ import PaymentMana from '@/views/PaymentMana.vue'
 import VerifySuccess from '@/views/VerifySuccess.vue'
 import PaymentSuccess from '@/views/PaymentSuccess.vue'
 import RegisteredAuctions from '@/views/RegisteredAuction.vue'
+import kycCCCD from '@/views/kycCCCD.vue' 
+import RegisterTest from '@/views/RegisterTest.vue'
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/auction', name: 'AuctionRoom', component: Auction },
@@ -23,6 +25,8 @@ const routes = [
   { path: '/verify-success', name: 'VerifySuccess', component: VerifySuccess, meta: { requiresAuth: true } },
   { path: '/payment-success', name: 'PaymentSuccess', component: PaymentSuccess, meta: { requiresAuth: true } },
   { path: '/registered-auctions', name: 'RegisteredAuctions', component: RegisteredAuctions, meta: { requiresAuth: true } },
+  { path: '/kyc-cccd', name: 'kycCCCD', component: kycCCCD, meta: { requiresAuth: true } },
+  { path: '/register-test', name: 'RegisterTest', component: RegisterTest },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 
 ]

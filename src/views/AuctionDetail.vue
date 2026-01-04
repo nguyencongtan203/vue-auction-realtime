@@ -1,7 +1,8 @@
 <!-- AuctionDetail.vue -->
 <template>
+  <!-- Nội dung template giữ nguyên, không thay đổi -->
   <div class="min-h-screen text-slate-800 py-10 px-6 max-w-5xl mx-auto fade-in">
-     <!-- Loading / Error: Hiển thị khi đang tải hoặc có lỗi -->
+    <!-- Loading / Error -->
     <div v-if="loading" class="flex justify-center items-center py-12 fade-in">
       <div class="flex flex-col items-center gap-3">
         <div id="wifi-loader">
@@ -27,16 +28,16 @@
       {{ error }}
     </div>
 
-    <!-- Nội dung chính: Khi đã load xong -->
+    <!-- Nội dung chính -->
     <div v-else>
-      <!-- Tiêu đề: Tên sản phẩm -->
+      <!-- Tiêu đề -->
       <h1
         class="text-2xl md:text-3xl font-bold text-center text-[#0f6bae] uppercase tracking-wide mb-8"
       >
         {{ auction.sanPham?.tensp }}
       </h1>
 
-      <!-- Bộ đếm ngược: Hiển thị thời gian đến khi bắt đầu đấu giá -->
+      <!-- Bộ đếm ngược -->
       <div class="flex justify-center flex-wrap gap-2 mb-10 items-center">
         <template v-for="(unit, label, index) in countdown" :key="label">
           <div
@@ -54,10 +55,21 @@
           >
         </template>
       </div>
+      <!-- Số người tham gia -->
+      <div class="flex justify-center mb-8">
+        <div
+          class="flex items-center gap-2 px-4 py-2 rounded-full bg-sky-50 border border-[#e3fafc] text-[#0f6bae] font-semibold shadow-sm"
+        >
+          <span>
+            {{ participants }}
+            người đã đăng ký tham gia
+          </span>
+        </div>
+      </div>
 
-      <!-- Thông tin đấu giá: Chia làm 2 cột trên md -->
+      <!-- Thông tin đấu giá -->
       <div class="grid md:grid-cols-2 gap-10">
-        <!-- Hình ảnh: Bên trái, có thumbnail nếu nhiều ảnh -->
+        <!-- Hình ảnh -->
         <div>
           <img
             :src="mainImage"
@@ -78,7 +90,7 @@
           </div>
         </div>
 
-        <!-- Chi tiết: Bên phải, danh sách thông tin -->
+        <!-- Chi tiết -->
         <div class="space-y-3 text-[15px] leading-relaxed">
           <div
             v-for="item in thongTin"
@@ -155,13 +167,6 @@
             Khôi phục
           </button>
           <button
-            class="px-2 py-1 hover:text-sky-400"
-            @click.stop="downloadCurrent"
-            title="Tải xuống"
-          >
-            ⬇︎
-          </button>
-          <button
             class="px-2 py-1 hover:text-rose-400"
             @click.stop="closeImagePopup"
             title="Đóng"
@@ -171,7 +176,7 @@
         </div>
       </div>
 
-      <!-- Stage: Ảnh chính -->
+      <!-- Ảnh chính -->
       <div class="h-full w-full flex items-center justify-center px-4 md:px-10">
         <div class="relative h-[80vh] w-full max-w-[96vw]">
           <img
@@ -212,7 +217,7 @@
         </div>
       </div>
 
-      <!-- Thumbnails: Dưới cùng, scroll ngang -->
+      <!-- Thumbnails -->
       <div class="absolute bottom-0 left-0 right-0 bg-black/70" @click.stop>
         <div class="mx-auto max-w-[95vw] px-3 py-3 overflow-x-auto">
           <div class="flex items-center gap-2">
@@ -241,7 +246,7 @@
     </div>
   </transition>
 
-  <!-- Toast: Thông báo -->
+  <!-- Toast -->
   <transition name="slide-fade">
     <div v-if="toast.show" class="fixed top-5 right-5 z-50">
       <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow">
@@ -253,7 +258,7 @@
           >
             <template v-for="(d, i) in toastMeta.iconPaths" :key="i">
               <path :d="d" />
-            </template>
+              </template>
           </svg>
         </div>
         <div class="px-4 py-2 -mx-3">
@@ -302,6 +307,11 @@ const countdown = computed(() => {
   return { Ngày: pad(d), Giờ: pad(h), Phút: pad(m), Giây: pad(s) };
 });
 
+// Số lượng ngươời tham gia
+const participants = computed(() => {
+  return userStore.numberOfParticipants ?? auction.value.slnguoithamgia ?? 0;
+});
+
 // Thông tin chi tiết
 const thongTin = computed(() => [
   { label: "Mã tài sản", value: auction.value.sanPham?.masp || "-" },
@@ -321,6 +331,7 @@ const thongTin = computed(() => [
           .join(" ")
       : "-",
   },
+  { label: "Tình trạng tài sản", value: auction.value.sanPham?.tinhtrangsp || "-" },
   {
     label: "Nơi xem tài sản",
     value: auction.value.taiKhoanNguoiBan?.diachi || "Không có thông tin",
@@ -428,6 +439,9 @@ async function fetchAuction(id) {
     const { code, result, message } = res.data || {};
     if (code === 200 && result) {
       auction.value = result;
+      if (typeof result.slnguoithamgia === "number") {
+        userStore.numberOfParticipants = result.slnguoithamgia;
+      }
       const imgList = auction.value?.sanPham?.hinhAnh || [];
       images.value = imgList.map((img) => getImageUrl(img.tenanh));
       mainImage.value = images.value[0] || "https://placehold.co/400x400?text=No+Image";
@@ -518,15 +532,49 @@ function showToast(message, type = "success") {
   setTimeout(() => (toast.value.show = false), 3000);
 }
 
+const auctionSSE = ref(null);
+
+function connectSSEForAuction() {
+  if (!auction.value.maphiendg) return;
+  const sseUrl = `${API}notifications/connect-auction?maphiendg=${auction.value.maphiendg}`;
+  const eventSource = new EventSource(sseUrl);
+  eventSource.addEventListener('number-of-participants', (e) => {
+    const value = Number(e.data);
+    if (!isNaN(value)) {
+      userStore.numberOfParticipants = value;
+    }
+  });
+  eventSource.onerror = () => {
+    console.warn('Auction SSE connection closed');
+  };
+  auctionSSE.value = eventSource;
+}
+
+function disconnectSSEForAuction() {
+  if (auctionSSE.value) {
+    auctionSSE.value.close();
+    auctionSSE.value = null;
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   fetchAuction(route.params.id);
   timer = setInterval(() => (now.value = Date.now()), 1000);
+  connectSSEForAuction();
 });
-onUnmounted(() => clearInterval(timer));
+onUnmounted(() => {
+  clearInterval(timer);
+  disconnectSSEForAuction();
+});
 watch(
   () => route.params.id,
-  (newId) => newId && fetchAuction(newId)
+  (newId) => {
+    if (newId) {
+      disconnectSSEForAuction();
+      fetchAuction(newId).then(() => connectSSEForAuction());
+    }
+  }
 );
 </script>
 

@@ -163,7 +163,7 @@
                     @click="markAsRead(notif.matb)"
                   >
                     <div class="flex items-start gap-3">
-                      <!-- Dot cho trạng thái chưa đọc -->
+                      <!-- Dot trạng thái chưa đọc -->
                       <div class="flex-shrink-0">
                         <div
                           class="w-2 h-2 bg-blue-500 rounded-full"
@@ -476,7 +476,7 @@ const userStore = useUserStore();
 const toastStore = useToastStore();
 const authPopup = inject("authPopup");
 
-// Sử dụng toast từ store
+// Toast
 const toast = computed(() => toastStore.toast);
 const toastMeta = computed(() => toastStore.toastMeta);
 
@@ -490,22 +490,22 @@ const notificationButton = ref(null);
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value;
 };
-// đánh dấu đã đọc
+// Đánh dấu đã đọc
 const markAsRead = async (id) => {
   await auctionNotificationStore.markAsRead(id);
 };
 
 const clearAllNotifications = async () => {
-  // xóa tất cả
+  // Xóa tất cả
   await auctionNotificationStore.clearAll();
 };
 
 const markAllAsRead = async () => {
-  // đánh dấu tất cả đã đọc
+  // Đánh dấu tất cả đã đọc
   await auctionNotificationStore.markAllAsRead();
 };
 
-// đóng dropdown thông báo khi click ngoài
+// Đóng dropdown thông báo khi click ngoài
 const handleClickOutside = (event) => {
   if (
     notificationDropdown.value &&

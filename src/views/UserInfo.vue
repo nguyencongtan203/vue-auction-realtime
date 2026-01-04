@@ -7,7 +7,7 @@
       THÔNG TIN TÀI KHOẢN
     </h2>
 
-    <!-- Toast chỉ dành cho lỗi/ thông báo từ server -->
+    <!-- Toast -->
     <transition name="slide-fade">
       <div v-if="toast.show" class="fixed top-5 right-5 z-50">
         <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow">
@@ -64,7 +64,7 @@
                   <span v-else class="text-emerald-600 text-sm font-medium italic"
                     >(Đã xác thực)</span
                   >
-                  <!-- Nút gửi xác thực lại nếu chưa xác thực -->
+                  <!-- Nút gửi xác thực lại -->
                   <button
                     v-if="!emailVerified"
                     @click="resendVerifyCode"

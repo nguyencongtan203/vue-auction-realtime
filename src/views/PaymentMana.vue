@@ -77,6 +77,13 @@
               >
                 <span>Bị hủy</span>
               </button>
+                            <button
+                :class="{ 'tab-btn--active': activeSubTab === 'LOST' }"
+                @click="changeSubTab('LOST')"
+                class="sub-tab-btn group"
+              >
+                <span>Mất cọc</span>
+              </button>
             </div>
             
             <div class="flex justify-end mb-4">
@@ -193,7 +200,7 @@
               </div>
             </div>
 
-            <!-- PHÂN TRANG cho deposit -->
+            <!-- PHÂN TRANG deposit -->
             <section v-if="depositTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
               <div
                 class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"
@@ -259,7 +266,7 @@
                 <span>Bị hủy</span>
               </button>
             </div>
-            <!-- Thêm thanh tìm kiếm ở đây -->
+            <!-- Thanh tìm kiếm -->
             <div class="flex justify-end mb-4">
               <div class="relative flex-1 max-w-[200px] max-w-sm">
                 <input
@@ -371,7 +378,7 @@
               </div>
             </div>
 
-            <!-- PHÂN TRANG cho win -->
+            <!-- PHÂN TRANG win -->
             <section v-if="winTotalPages > 1" class="px-6 lg:px-8 py-6 lg:py-8">
               <div
                 class="mt-8 flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-center"

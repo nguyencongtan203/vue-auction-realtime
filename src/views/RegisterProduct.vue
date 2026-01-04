@@ -137,7 +137,6 @@
                   </button>
                 </div>
                 <label
-                  v-if="product.images.length < 3"
                   class="w-32 h-32 border border-dashed border-gray-400 rounded-md flex items-center justify-center cursor-pointer text-gray-400"
                 >
                   Thêm ảnh
@@ -208,7 +207,7 @@ const loading = ref(true);
 const toast = ref({ show: false, message: "", type: "success" });
 const formattedPrice = ref("");
 
-/* Toast meta */
+// Toast meta
 const toastMeta = computed(() => {
   const type = (toast.value.type || "info").toLowerCase();
   if (type === "success") {
@@ -257,14 +256,14 @@ const showToast = (msg, type = "success") => {
   setTimeout(() => (toast.value.show = false), 3000);
 };
 
-/* Price input */
+// Price input
 function onPriceInput(e) {
   let val = e.target.value.replace(/[^\d]/g, ""); // Chỉ giữ số
   product.value.expectedPrice = val ? Number(val) : null;
   formattedPrice.value = val ? new Intl.NumberFormat("vi-VN").format(Number(val)) : "";
 }
 
-/* Ảnh: sanitize và preview */
+// Images: sanitize and preview
 const handleImage = (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -274,7 +273,7 @@ const handleImage = (e) => {
     showToast("Chỉ chấp nhận ảnh PNG, JPG, JPEG!", "error");
     return;
   }
-  if (product.value.images.length >= 3) return;
+  if (product.value.images.length >= 10) return;
 
   // Sanitize tên file: loại bỏ dấu, khoảng trắng, chuyển lowercase
   const sanitizedName = file.name
@@ -300,7 +299,7 @@ const removeImage = (index) => {
   product.value.images.splice(index, 1);
 };
 
-/* Options cho dropdown */
+// Options cho dropdown
 const catOptions = computed(() =>
   (categories.value || []).map((c) => ({ value: String(c.madm), label: c.tendm }))
 );
@@ -308,7 +307,7 @@ const cityOptions = computed(() =>
   (cities.value || []).map((c) => ({ value: String(c.matp), label: c.tentp }))
 );
 
-/* Submit sản phẩm + ảnh */
+// Submit sản phẩm + ảnh
 const submitProduct = async () => {
   errors.value = {};
   // Trim và validate
@@ -385,13 +384,13 @@ const submitProduct = async () => {
     if (err.response && err.response.data) {
       showToast(err.response.data.message || "Đăng ký tài sản thất bại!", "error");
     } else {
-      // Lỗi khác (network, etc.)
+      // Lỗi khác
       showToast("Đăng ký tài sản thất bại!", "error");
     }
   }
 };
 
-/* Tải danh mục + thành phố */
+// tải danh mục và thành phố
 onMounted(async () => {
   try {
     const [catRes, cityRes] = await Promise.all([

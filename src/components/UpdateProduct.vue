@@ -88,7 +88,7 @@
 
         <div class="form-row flex-col items-start">
           <label class="text-sm font-semibold text-gray-700"
-            >Ảnh sản phẩm (tối đa 3 ảnh)</label
+            >Ảnh sản phẩm</label
           >
           <div class="flex gap-4 flex-wrap mt-2">
             <div
@@ -112,7 +112,6 @@
             </div>
 
             <label
-              v-if="form.hinhAnh.length < 3"
               class="w-32 h-32 border border-dashed rounded-md flex items-center justify-center cursor-pointer text-gray-400"
             >
               Thêm ảnh
@@ -159,7 +158,7 @@
     @submit="handleConfirmSubmit"
   />
 
-  <!-- Toast chỉ dành cho lỗi/ thông báo từ server -->
+  <!-- Toast -->
   <transition name="slide-fade">
     <div v-if="toast.show" class="fixed top-5 right-5 z-50">
       <div class="flex w-full max-w-sm overflow-hidden bg-white rounded-lg shadow">
@@ -271,7 +270,7 @@ watch(
   () => props.product,
   (p) => {
     if (!p) return;
-    const initial = (p.hinhAnh || []).slice(0, 3).map((img) => ({
+    const initial = (p.hinhAnh || []).slice(0, 10).map((img) => ({
       tenanh: img.tenanh,
       file: null,
       preview: null,
@@ -316,10 +315,10 @@ function onPriceInput(e) {
 function onAddImage(e) {
   const file = e.target.files?.[0];
   if (!file) return;
-  if (form.hinhAnh.length >= 3) {
-    errors.hinhAnh = "Tối đa 3 ảnh.";
-    return;
-  }
+  // if (form.hinhAnh.length >= 10) {
+  //   errors.hinhAnh = "Tối đa 10 ảnh.";
+  //   return;
+  // }
   const safeName = file.name
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

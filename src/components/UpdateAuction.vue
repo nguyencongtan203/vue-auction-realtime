@@ -344,8 +344,8 @@ const handleConfirmSubmit = async () => {
   submitting.value = true;
   try {
     const payload = {
-      buocgia: form.buocgia.trim(),
-      tiencoc: form.tiencoc.trim(),
+      buocgia: form.buocgia,
+      tiencoc: form.tiencoc,
       thoigianbd: formatDateTime(form.thoigianbd),
       thoigiankt: formatDateTime(form.thoigiankt),
       thoigianbddk: formatDateTime(form.thoigianbddk),

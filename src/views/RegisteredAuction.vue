@@ -267,7 +267,7 @@ function nextPage() {
 const now = ref(Date.now());
 let timer = null;
 
-// Quản lý request để tránh race
+// Quản lý request
 let abortController = null;
 const inFlight = ref(false);
 
@@ -331,7 +331,7 @@ function goAuction(a) {
 }
 
 async function fetchAuctions(pageNumber = 0) {
-  // Huỷ request cũ nếu còn
+  // Huỷ request cũ
   if (abortController) abortController.abort();
   abortController = new AbortController();
 
@@ -375,7 +375,6 @@ async function fetchAuctions(pageNumber = 0) {
     }
   } catch (err) {
     if (err?.name === "CanceledError" || err?.message === "canceled") {
-      // Bị hủy -> bỏ qua
     } else {
       error.value =
         err?.response?.data?.message || err?.message || "Không thể tải dữ liệu.";
@@ -392,7 +391,7 @@ function goTo(n) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// Refetch khi quay lại trang (keep-alive)
+// Refetch
 onActivated(() => {
   // refetch
   if (!inFlight.value) {
@@ -407,7 +406,6 @@ watch(
   }
 );
 
-// khi trang khác tạo phiên / thanh toán cọc
 function onAuctionPaidChanged() {
   // Reset về trang đầu tiên
   fetchAuctions(0);
