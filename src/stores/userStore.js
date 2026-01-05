@@ -99,8 +99,6 @@ export const useUserStore = defineStore('user', {
         }
       })
 
-      // Loại bỏ 'number-of-participants' vì xử lý riêng trong AuctionDetail.vue
-
       eventSource.onerror = () => {
         console.warn('SSE connection closed')
       }

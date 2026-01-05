@@ -729,9 +729,9 @@ const handleRegister = async () => {
   }
 };
 
-function handleForgotPassword(e) {
-  e?.preventDefault?.();
-  toastStore.showToast("Tính năng Quên mật khẩu sẽ sớm có.", "info");
+function handleForgotPassword() {
+  close();
+  router.push({ name: "ForgotPass" });
 }
 
 // panel class helpers

@@ -362,7 +362,7 @@ const submitProduct = async () => {
       });
 
       if (imageRes.data.code === 200) {
-        showToast("Upload ảnh thành công!", "success");
+        showToast("Đăng ký tài sản thành công!", "success");
       } else {
         showToast(imageRes.data.message || "Upload ảnh thất bại!", "error");
       }

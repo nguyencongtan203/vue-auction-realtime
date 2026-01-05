@@ -188,10 +188,102 @@
                   <p v-if="errors.matp" class="error-msg">{{ errors.matp }}</p>
                 </div>
               </div>
+
+              <div class="form-row">
+                <div class="w-40">
+                  <p class="text-sm text-gray-700 font-bold leading-tight">
+                    Căn cước công dân
+                  </p>
+
+                  <p class="text-sm mt-1 px-4 font-medium" :class="kycTextClass">
+                    ({{ kycLabel }})
+                  </p>
+                </div>
+
+                <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Mặt trước -->
+                  <div class="space-y-2">
+                    <p class="text-sm font-medium text-gray-700">Mặt trước</p>
+
+                    <div
+                      class="relative border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-sky-400 transition"
+                      :class="errors.cccdFront && 'border-red-500'"
+                      ,
+                      @click="editing && !kycVerified && $refs.cccdFrontInput.click()"
+                    >
+                      <input
+                        ref="cccdFrontInput"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        :disabled="!editing || kycVerified"
+                        @change="onCccdFrontChange"
+                      />
+
+                      <img
+                        v-if="cccdFrontPreview || user?.anhmattruoc"
+                        :src="cccdFrontPreview || getImageUrl(user.anhmattruoc)"
+                        class="mx-auto max-h-40 object-contain rounded"
+                      />
+
+                      <p v-else class="text-gray-400 text-sm">
+                        {{ editing ? "Chọn ảnh CCCD mặt trước" : "Chưa có ảnh" }}
+                      </p>
+                    </div>
+
+                    <p v-if="errors.cccdFront" class="error-msg">
+                      {{ errors.cccdFront }}
+                    </p>
+                  </div>
+
+                  <!-- Mặt sau -->
+                  <div class="space-y-2">
+                    <p class="text-sm font-medium text-gray-700">Mặt sau</p>
+
+                    <div
+                      class="relative border-2 border-dashed rounded-lg p-3 text-center cursor-pointer hover:border-sky-400 transition"
+                      :class="errors.cccdBack && 'border-red-500'"
+                      @click="editing && !kycVerified && $refs.cccdBackInput.click()"
+                    >
+                      <input
+                        ref="cccdBackInput"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        :disabled="!editing || kycVerified"
+                        @change="onCccdBackChange"
+                      />
+
+                      <img
+                        v-if="cccdBackPreview || user?.anhmatsau"
+                        :src="cccdBackPreview || getImageUrl(user.anhmatsau)"
+                        class="mx-auto max-h-40 object-contain rounded"
+                      />
+
+                      <p v-else class="text-gray-400 text-sm">
+                        {{ editing ? "Chọn ảnh CCCD mặt sau" : "Chưa có ảnh" }}
+                      </p>
+                    </div>
+
+                    <p v-if="errors.cccdBack" class="error-msg">
+                      {{ errors.cccdBack }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- BTN -->
             <div class="pt-6 flex justify-end gap-3">
+              <!-- Nút KYC: chỉ hiện khi chưa xác thực và đang không edit -->
+              <button
+                v-if="!editing && !kycVerified"
+                @click="goToKycVerify"
+                class="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-semibold btn-flash"
+              >
+                Xác thực KYC
+              </button>
+
               <button
                 v-if="!editing"
                 @click="enableEdit"
@@ -233,12 +325,34 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
+import { useRouter } from "vue-router";
 import ChangePasswordPopup from "@/components/ChangePasswordPopup.vue";
 import SoftDropdown from "@/components/SoftDropdown.vue";
 import AccountSite from "@/components/AccountSite.vue";
 
 const API = "http://localhost:8082/api";
+const getImageUrl = (tenanh) => `${API}/imgs/kyc/${tenanh}`;
 const userStore = useUserStore();
+const router = useRouter();
+
+const kycLabel = computed(() => user.value?.xacthuckyc || "Chưa xác thực");
+
+const kycVerified = computed(() => {
+  const s = String(user.value?.xacthuckyc || "").toUpperCase();
+  return s === "ACTIVE" || s === "ĐÃ XÁC THỰC" || s === "ĐANG HOẠT ĐỘNG";
+});
+
+const kycTextClass = computed(() => {
+  return kycVerified.value ? "text-emerald-600" : "text-red-600";
+});
+
+function goToKycVerify() {
+  const front = user.value?.anhmattruoc || "";
+  router.push({
+    name: "kycCCCD", // tên route của mày
+    query: { front },
+  });
+}
 
 // Reactive state
 const changePasswordPopup = ref(null);
@@ -249,6 +363,65 @@ const originalData = ref(null);
 const errors = ref({});
 const toast = ref({ show: false, message: "", type: "success" });
 const resending = ref(false);
+
+/* =======================
+   CCCD (NEW)
+======================= */
+const cccdFrontFile = ref(null);
+const cccdBackFile = ref(null);
+const cccdFrontPreview = ref("");
+const cccdBackPreview = ref("");
+
+function revokePreview(url) {
+  if (!url) return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch (_) {}
+}
+
+function resetCccdState() {
+  cccdFrontFile.value = null;
+  cccdBackFile.value = null;
+  revokePreview(cccdFrontPreview.value);
+  revokePreview(cccdBackPreview.value);
+  cccdFrontPreview.value = "";
+  cccdBackPreview.value = "";
+  delete errors.value.cccdFront;
+  delete errors.value.cccdBack;
+}
+
+function onCccdFrontChange(e) {
+  const file = e?.target?.files?.[0];
+  if (!file) return;
+
+  if (!file.type?.startsWith("image/")) {
+    errors.value.cccdFront = "File phải là hình ảnh.";
+    return;
+  }
+
+  delete errors.value.cccdFront;
+  cccdFrontFile.value = file;
+  revokePreview(cccdFrontPreview.value);
+  cccdFrontPreview.value = URL.createObjectURL(file);
+}
+
+function onCccdBackChange(e) {
+  const file = e?.target?.files?.[0];
+  if (!file) return;
+
+  if (!file.type?.startsWith("image/")) {
+    errors.value.cccdBack = "File phải là hình ảnh.";
+    return;
+  }
+
+  delete errors.value.cccdBack;
+  cccdBackFile.value = file;
+  revokePreview(cccdBackPreview.value);
+  cccdBackPreview.value = URL.createObjectURL(file);
+}
+/* =======================
+   END CCCD
+======================= */
 
 // Computed từ store
 const user = computed(() => userStore.user);
@@ -320,6 +493,8 @@ function enableEdit() {
   editing.value = true;
   originalData.value = JSON.parse(JSON.stringify(user.value));
   errors.value = {};
+  // CCCD (NEW)
+  resetCccdState();
 }
 
 function cancelEdit() {
@@ -328,6 +503,8 @@ function cancelEdit() {
   }
   editing.value = false;
   errors.value = {};
+  // CCCD (NEW)
+  resetCccdState();
 }
 
 function validateUserData() {
@@ -349,6 +526,14 @@ function validateUserData() {
     errors.value.diachigiaohang = "Vui lòng nhập địa chỉ giao hàng.";
   if (!user.value.thanhPho?.matp || user.value.thanhPho.matp === "default")
     errors.value.matp = "Vui lòng chọn thành phố.";
+
+  // CCCD: chỉ bắt upload nếu tài khoản chưa có ảnh sẵn
+  if (!cccdFrontFile.value && !user.value?.anhmattruoc) {
+    errors.value.cccdFront = "Vui lòng tải ảnh CCCD mặt trước.";
+  }
+  if (!cccdBackFile.value && !user.value?.anhmatsau) {
+    errors.value.cccdBack = "Vui lòng tải ảnh CCCD mặt sau.";
+  }
 
   return Object.keys(errors.value).length === 0;
 }
@@ -382,8 +567,20 @@ async function saveChanges() {
       matp: user.value.thanhPho.matp,
     };
 
-    const res = await axios.put(`${API}/users/update-info`, payload, {
-      headers: { Authorization: `Bearer ${token}` },
+    // CCCD (NEW): gửi multipart/form-data theo backend
+    const fd = new FormData();
+    fd.append(
+      "request",
+      new Blob([JSON.stringify(payload)], { type: "application/json" })
+    );
+    if (cccdFrontFile.value) fd.append("files", cccdFrontFile.value);
+    if (cccdBackFile.value) fd.append("files", cccdBackFile.value);
+
+    const res = await axios.put(`${API}/users/update-info`, fd, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // axios sẽ tự set boundary, đừng tự tay set bậy
+      },
     });
 
     const { code, result, message } = res.data || {};
@@ -392,6 +589,8 @@ async function saveChanges() {
       showToast(message || "Cập nhật thông tin thành công!", "success");
       editing.value = false;
       errors.value = {};
+      // CCCD (NEW)
+      resetCccdState();
     } else {
       showToast(message || "Lưu thất bại, vui lòng thử lại!", "error");
     }

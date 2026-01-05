@@ -334,7 +334,7 @@
                             </button>
                           </template>
                           <template v-if="a.trangthai === 'Chưa yêu cầu' || a.trangthai === 'Chờ duyệt'">
-                            <button class="soft-btn blue" @click="openEditedAuction(a)">
+                            <button class="soft-btn yellow" @click="openEditedAuction(a)">
                               Chỉnh sửa
                             </button>
                             <button
@@ -344,6 +344,11 @@
                               Xóa
                             </button>
                           </template>
+                              <template v-if="a.trangthai !== 'Chưa yêu cầu' && a.trangthai !== 'Chờ duyệt'">
+      <button class="soft-btn green" @click="goToAuction(a.maphiendg)">
+        Truy cập
+      </button>
+    </template>
                         </div>
                       </td>
                     </tr>
@@ -459,6 +464,7 @@
 import { ref, reactive, onMounted, onActivated, onUnmounted, computed, watch } from "vue";
 import axios from "axios";
 import { useUserStore } from "@/stores/userStore";
+import { useRouter } from "vue-router";
 import UpdateProduct from "@/components/UpdateProduct.vue";
 import CreateAuction from "@/components/CreateAuction.vue";
 import UpdateAuction from "@/components/UpdateAuction.vue";
@@ -469,7 +475,7 @@ defineOptions({ name: "ProductManagement" });
 
 const API = "http://localhost:8082/api";
 const userStore = useUserStore();
-
+const router = useRouter();
 // Computed từ store
 const fullName = computed(() =>
   [userStore.user?.ho, userStore.user?.tenlot, userStore.user?.ten]
@@ -767,6 +773,10 @@ function nextAuctionsPage() {
 
 function goToAuctionsPage(n) {
   goAuctionsPage(n);
+}
+
+function goToAuction(id) {
+  router.push({ name: "Auction", query: { id } });
 }
 
 function statusColor(st) {

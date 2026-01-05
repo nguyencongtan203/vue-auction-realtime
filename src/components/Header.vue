@@ -58,7 +58,7 @@
                   class="block px-3 py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
                   @click.prevent="goToCategory(cat)"
                 >
-                  {{ cat }}
+                  {{ cat.tendm }}
                 </a>
               </template>
               <div v-else class="px-3 py-2 text-sm text-slate-500 text-center">
@@ -572,7 +572,7 @@ async function loadCategories() {
     const res = await fetch(`${API}/cates/find-all`);
     const data = await res.json();
     if (data.code === 200) {
-      categories.value = data.result.map((item) => item.tendm).filter(Boolean);
+      categories.value = data.result;
     }
   } catch (error) {
     console.error("Lỗi khi gọi API danh mục:", error);
@@ -600,7 +600,7 @@ function goPaymentManagement() {
   router.push({ name: "PaymentMana" });
 }
 function goToCategory(cat, mobile = false) {
-  router.push({ name: "SearchResults", query: { q: "", category: cat } });
+  router.push({ name: "AuctionRoom", query: { category: cat.madm } });
   if (mobile) mobileOpen.value = false;
 }
 function goRegisteredAuctions() {

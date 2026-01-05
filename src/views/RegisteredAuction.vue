@@ -116,7 +116,7 @@
                     >
                       {{ a.sanPham?.tensp || "Sản phẩm" }}
                       <span class="ml-2 text-slate-500 text-sm font-normal"
-                        >#{{ a.maphiendg }}</span
+                        >{{ a.maphiendg }}</span
                       >
                     </h3>
                     <span

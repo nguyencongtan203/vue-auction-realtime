@@ -130,7 +130,7 @@
             </div>
           </div>
           <transition name="fade">
-            <p v-if="actionError" class="inline-error mt-3">{{ actionError }}</p>
+            <p v-if="actionError" :class="['inline-error mt-3', successMessage ? 'text-green-600' : '']">{{ actionError }}</p>
           </transition>
         </section>
       </div>
@@ -147,7 +147,7 @@
             <p>Đang tải lịch sử...</p>
           </div>
 
-          <ul v-else class="history-list">
+          <ul class="history-list">
             <li
               v-for="(b, i) in displayedBids"
               :key="b.maphientg"
@@ -161,7 +161,7 @@
                 >
                   {{ b.taiKhoanNguoiRaGia?.matk }}
                   <span v-if="b.taiKhoanNguoiRaGia?.matk === user?.matk" class="me-tag"
-                    >Bạn</span
+                    >Tôi</span
                   >
                 </span>
               </div>
@@ -233,12 +233,11 @@ import Stomp from "stompjs";
 import axios from "axios";
 
 const API = "http://localhost:8082/api";
-const SOCKET_URL = "http://localhost:8082/api/ws-auction";
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
 const { user, token } = storeToRefs(userStore);
-
+const SOCKET_URL = computed(() => `http://localhost:8082/api/ws-auction?token=${token.value}`);
 const roomId = ref("");
 const productName = ref("");
 const startPrice = ref(0);
@@ -246,7 +245,6 @@ const highestPrice = ref(0);
 const stepPrice = ref(0);
 const startTime = ref(null);
 const endTime = ref(null);
-const statusText = ref("");
 const loadingAuction = ref(false);
 const auctionError = ref("");
 
@@ -260,10 +258,12 @@ const actionError = ref("");
 const stompConnected = ref(false);
 const isWaiting = ref(false);
 const countdown = ref(10);
+const successMessage = ref(false);
 let countdownTimer = null;
 let stompClient = null;
 let stompSubscription = null;
 let reconnectTimer = null;
+let bidTimeout = null;
 
 const now = ref(Date.now());
 let nowTimer = null;
@@ -292,13 +292,16 @@ const countDownToEnd = computed(() => {
   if (now.value < s || now.value >= e) return "";
   return formatDuration(e - now.value);
 });
+const statusText = computed(() => {
+  if (countDownToStart.value) return "Chưa bắt đầu";
+  if (countDownToEnd.value) return "Đang diễn ra";
+  return "Đã kết thúc";
+});
 const statusClass = computed(() => {
   const st = (statusText.value || "").toLowerCase();
-  if (st.includes("pending") || st.includes("chờ")) return "pending";
-  if (st.includes("approved") || st.includes("bắt đầu") || st.includes("đang"))
-    return "live";
-  if (st.includes("end") || st.includes("kết thúc") || st.includes("closed"))
-    return "ended";
+  if (st.includes("chưa bắt đầu")) return "pending";
+  if (st.includes("đang diễn ra")) return "live";
+  if (st.includes("đã kết thúc")) return "ended";
   return "neutral";
 });
 
@@ -384,15 +387,17 @@ function resetState() {
   stepPrice.value = 0;
   startTime.value = null;
   endTime.value = null;
-  statusText.value = "";
   bids.value = [];
   auctionError.value = "";
   actionError.value = "";
   isWaiting.value = false;
   sending.value = false;
   currentPage.value = 1;
+  successMessage.value = false;
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = null;
+  if (bidTimeout) clearTimeout(bidTimeout);
+  bidTimeout = null;
 }
 
 async function fetchAuction() {
@@ -409,7 +414,6 @@ async function fetchAuction() {
       stepPrice.value = Number(r?.buocgia || 0);
       startTime.value = r?.thoigianbd || null;
       endTime.value = r?.thoigiankt || null;
-      statusText.value = r?.trangthai || "";
     } else auctionError.value = res.data?.message || "Không thể tải thông tin phiên.";
   } catch (e) {
     auctionError.value = e?.response?.data?.message || e?.message || "Lỗi tải phiên.";
@@ -421,15 +425,18 @@ async function fetchAuction() {
 function connectWebSocket() {
   if (!roomId.value) return;
   disconnectWebSocket();
-  const socket = new SockJS(SOCKET_URL);
+  console.log("Connecting WS with URL:", SOCKET_URL.value);
+  const socket = new SockJS(SOCKET_URL.value);
   stompClient = Stomp.over(socket);
   stompClient.debug = null;
   stompClient.connect(
     {},
     () => {
+      console.log("WebSocket connected successfully");
       stompConnected.value = true;
       loadingHistory.value = true;
       stompClient.subscribe("/user/queue/history", (frame) => {
+        console.log("Received history:", frame.body);
         try {
           const list = JSON.parse(frame.body) || [];
           list.sort((a, b) => new Date(b.thoigian) - new Date(a.thoigian));
@@ -438,13 +445,40 @@ function connectWebSocket() {
         } catch {}
         loadingHistory.value = false;
       });
+      stompClient.subscribe("/user/queue/bid-result", (frame) => {
+        console.log("Received bid-result raw:", frame.body);
+        try {
+          const result = JSON.parse(frame.body);
+          console.log("Parsed bid-result:", result);
+          if (result.success) {
+            successMessage.value = true;
+            actionError.value = result.message || "Trả giá thành công.";
+            console.log("Bid success:", result.message);
+          } else {
+            successMessage.value = false;
+            actionError.value = result.message || "Lỗi trả giá.";
+            console.log("Bid error:", result.message);
+          }
+          setTimeout(() => {
+            successMessage.value = false;
+            actionError.value = "";
+          }, 4000);
+        } catch (e) {
+          console.error("Error parsing bid-result:", e);
+          actionError.value = "Lỗi xử lý phản hồi từ server.";
+        }
+        if (bidTimeout) clearTimeout(bidTimeout);
+        bidTimeout = null;
+        sending.value = false;
+      });
       stompSubscription = stompClient.subscribe(
         `/topic/auction/${roomId.value}`,
         onIncomingBid
       );
       requestHistory(roomId.value, maxStored);
     },
-    () => {
+    (error) => {
+      console.error("WebSocket connection failed:", error);
       stompConnected.value = false;
       if (reconnectTimer) clearTimeout(reconnectTimer);
       reconnectTimer = setTimeout(() => {
@@ -497,6 +531,8 @@ function disconnectWebSocket() {
   stompConnected.value = false;
   if (reconnectTimer) clearTimeout(reconnectTimer);
   reconnectTimer = null;
+  if (bidTimeout) clearTimeout(bidTimeout);
+  bidTimeout = null;
 }
 
 function setBidStep(val) {
@@ -534,6 +570,7 @@ function sendBid() {
     return;
   }
   sending.value = true;
+  console.log("Sending bid with step:", bidStep.value);
   const payload = {
     phienDauGia: { maphiendg: roomId.value },
     taiKhoanNguoiRaGia: { matk: user.value.matk },
@@ -541,9 +578,16 @@ function sendBid() {
   };
   try {
     stompClient.send("/app/bid", {}, JSON.stringify(payload));
+    bidTimeout = setTimeout(() => {
+      if (sending.value) {
+        sending.value = false;
+        actionError.value = "Không nhận được phản hồi từ server. Vui lòng thử lại.";
+        console.log("Bid timeout, no response received");
+        setTimeout(() => (actionError.value = ""), 4000);
+      }
+    }, 5000);
   } catch (e) {
     actionError.value = "Gửi trả giá thất bại: " + (e.message || e);
-  } finally {
     sending.value = false;
   }
 }
@@ -621,5 +665,9 @@ onUnmounted(() => {
 
 <style scoped>
 @import "@/assets/styles/auction.css";
+
+.inline-error.text-green-600 {
+  color: #059669;
+  font-weight: 600;
+}
 </style>
-Đăng ký tài sản thành công

@@ -1,5 +1,5 @@
-<!-- AuctionRoom.vue -->
 <template>
+  <!-- Auction.vue -->
   <div class="max-w-[1400px] mx-auto px-4 lg:px-6 mt-5 relative">
     <!-- Toolbar -->
     <div
@@ -410,7 +410,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from "vue";
 import axios from "axios";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 const API = "http://localhost:8082/api";
 
@@ -445,6 +445,7 @@ const totalPages = ref(1);
 const now = ref(Date.now());
 const pageContent = ref([]);
 const router = useRouter();
+const route = useRoute();
 const statusFilter = ref("upcoming"); // upcoming | ongoing | ended
 const imgState = reactive({});
 const loading = ref(true);
@@ -523,6 +524,34 @@ watch(
 watch(statusFilter, () => {
   page.value = 1;
   fetchAuctions();
+});
+watch(() => route.query, (newQuery) => {
+  if (!newQuery || !newQuery.category) {
+    selectedCate.value = null;
+    return;
+  }
+  if (categories.value.length > 0) {
+    const cat = categories.value.find(c => c.madm === newQuery.category);
+    console.log('Found category for query:', cat);
+    if (cat) {
+      selectedCate.value = cat;
+    } else {
+      selectedCate.value = null;
+      console.log('Category not found for madm:', newQuery.category);
+    }
+  } else {
+    console.log('Categories not loaded yet');
+  }
+}, { immediate: true });
+
+// Watch categories
+watch(categories, () => {
+  if (categories.value.length > 0 && route.query.category) {
+    const cat = categories.value.find(c => c.madm === route.query.category);
+    if (cat) {
+      selectedCate.value = cat;
+    }
+  }
 });
 
 // Functions
@@ -617,6 +646,7 @@ async function fetchAuctions() {
     params.append("sort", "thoigianbd,asc");
 
     const url = `${API}/auctions/find-filtered?${params.toString()}`;
+    console.log('Fetching auctions with URL:', url);
     const res = await axios.get(url);
 
     if (res.data?.code === 200 && res.data.result) {
@@ -778,12 +808,14 @@ function goAuctionDetail(id) {
 
 // Lifecycle
 let timer = null;
-onMounted(() => {
-  fetchAuctions();
-  fetchCategories();
-  fetchCities();
+onMounted(async () => {
+  console.log('onMounted, initial route.query:', route.query);
+  await fetchCategories();
+  await fetchCities();
   document.addEventListener("click", handleClickOutside);
   timer = setInterval(() => (now.value = Date.now()), 1000);
+  console.log('Categories after fetch:', categories.value);
+  fetchAuctions();
 });
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
