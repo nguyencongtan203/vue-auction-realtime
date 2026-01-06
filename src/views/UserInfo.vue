@@ -343,13 +343,13 @@ const kycVerified = computed(() => {
 });
 
 const kycTextClass = computed(() => {
-  return kycVerified.value ? "text-emerald-600" : "text-red-600";
+  return kycVerified.value ? "text-emerald-600 text-sm font-medium italic" : "text-red-600 text-sm font-medium italic";
 });
 
 function goToKycVerify() {
   const front = user.value?.anhmattruoc || "";
   router.push({
-    name: "kycCCCD", // tên route của mày
+    name: "kycCCCD",
     query: { front },
   });
 }
@@ -365,7 +365,7 @@ const toast = ref({ show: false, message: "", type: "success" });
 const resending = ref(false);
 
 /* =======================
-   CCCD (NEW)
+   CCCD 
 ======================= */
 const cccdFrontFile = ref(null);
 const cccdBackFile = ref(null);
@@ -493,7 +493,6 @@ function enableEdit() {
   editing.value = true;
   originalData.value = JSON.parse(JSON.stringify(user.value));
   errors.value = {};
-  // CCCD (NEW)
   resetCccdState();
 }
 
@@ -503,7 +502,6 @@ function cancelEdit() {
   }
   editing.value = false;
   errors.value = {};
-  // CCCD (NEW)
   resetCccdState();
 }
 
@@ -527,7 +525,6 @@ function validateUserData() {
   if (!user.value.thanhPho?.matp || user.value.thanhPho.matp === "default")
     errors.value.matp = "Vui lòng chọn thành phố.";
 
-  // CCCD: chỉ bắt upload nếu tài khoản chưa có ảnh sẵn
   if (!cccdFrontFile.value && !user.value?.anhmattruoc) {
     errors.value.cccdFront = "Vui lòng tải ảnh CCCD mặt trước.";
   }
@@ -579,7 +576,6 @@ async function saveChanges() {
     const res = await axios.put(`${API}/users/update-info`, fd, {
       headers: {
         Authorization: `Bearer ${token}`,
-        // axios sẽ tự set boundary, đừng tự tay set bậy
       },
     });
 
