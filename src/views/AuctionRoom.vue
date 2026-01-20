@@ -129,9 +129,9 @@
               </small>
             </div>
           </div>
-          <transition name="fade">
-            <p v-if="actionError" :class="['inline-error mt-3', successMessage ? 'text-green-600' : '']">{{ actionError }}</p>
-          </transition>
+<transition name="fade">
+  <p v-if="actionError" :class="['inline-error mt-3', successMessage ? 'success' : '']">{{ actionError }}</p>
+</transition>
         </section>
       </div>
 

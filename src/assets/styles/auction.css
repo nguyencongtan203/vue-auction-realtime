@@ -362,6 +362,11 @@
   font-weight: 600;
   animation: fadeIn 0.3s ease;
 }
+.inline-error.success {
+  background: #dcfce7; /* Màu nền xanh nhạt */
+  color: #166534; /* Màu chữ xanh đậm */
+  border-color: #86efac; /* Màu viền xanh */
+}
 .error-card {
   border-color: #fecaca;
   background: #fef2f2;
