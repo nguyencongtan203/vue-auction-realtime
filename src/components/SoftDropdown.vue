@@ -227,7 +227,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
   font-weight: 600;
 }
 
-/* Trigger: underline giống input + line khi active/mở */
+/* Trigger */
 .dropdown-trigger {
   display: flex;
   align-items: center;
@@ -237,7 +237,6 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
   cursor: pointer;
   user-select: none;
   border-radius: 0px;
-  /* đảm bảo có line dưới ngay cả khi rule .input bị override ở nơi khác */
   border-bottom-width: 2px;
   border-bottom-style: solid;
   border-bottom-color: #d1d5db;
@@ -253,7 +252,6 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
   flex: 0 0 auto;
 }
 
-/* Khi hover/focus/đang mở: line đổi màu như input focus */
 .dropdown-trigger:hover {
   border-bottom-color: color-mix(in srgb, var(--dd-active, #127fcf) 45%, white);
 }
@@ -265,7 +263,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
   border-bottom-color: var(--dd-active, #127fcf);
 }
 
-/* Error state: underline đỏ */
+/* Error state */
 .dropdown-trigger.error {
   border-bottom-color: #e03131 !important;
   animation: shake .22s ease-in-out;
@@ -330,7 +328,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
   transform: translateY(-6px);
 }
 
-/* Scrollbar nhẹ */
+/* Scrollbar */
 .dropdown-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -345,7 +343,7 @@ onBeforeUnmount(() => document.removeEventListener("click", onDocClick));
   background: #b8c3ce;
 }
 
-/* ========= Hiệu ứng ========= */
+/* Hiệu ứng */
 @keyframes shake {
 
   0%,

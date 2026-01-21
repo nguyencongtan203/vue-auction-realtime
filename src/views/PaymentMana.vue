@@ -168,7 +168,7 @@
                   </div>
                   <div class="invoice-row">
                     <span class="invoice-label">Hạn thanh toán</span>
-                    <span class="invoice-value">{{ formatDate(item.thoigianthanhtoan) }}</span>
+                    <span class="invoice-value">{{ formatDate(item.hanthanhtoan) }}</span>
                   </div>
                   <div class="invoice-row">
                     <span class="invoice-label">Trạng thái</span>
@@ -346,7 +346,7 @@
                   </div>
                   <div class="invoice-row">
                     <span class="invoice-label">Hạn thanh toán</span>
-                    <span class="invoice-value">{{ formatDate(item.thoigianthanhtoan) }}</span>
+                    <span class="invoice-value">{{ formatDate(item.hanthanhtoan) }}</span>
                   </div>
                   <div class="invoice-row">
                     <span class="invoice-label">Trạng thái</span>
@@ -565,13 +565,14 @@ async function fetchDeposits() {
         keyword: keywordDeposit.value,
         page: depositPage.value - 1,
         size: depositPageSize.value,
-        sort: "thoigianthanhtoan,asc",
+        sort: "hanthanhtoan,asc",
       },
       signal: abortController.signal,
     });
 
     if (res.data.code === 200) {
       const page = res.data.result;
+      console.log(page);
       deposits.value = page.content || [];
       depositTotalPages.value = page.page.totalPages || 1;
     } else {
@@ -609,7 +610,7 @@ async function fetchWins() {
         keyword: keywordWin.value,
         page: winPage.value - 1,
         size: winPageSize.value,
-        sort: "thoigianthanhtoan,asc",
+        sort: "hanthanhtoan,asc",
       },
       signal: winAbortController.signal,
     });

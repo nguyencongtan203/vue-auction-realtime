@@ -81,23 +81,14 @@
             class="absolute -bottom-0.5 right-1/2 w-0 transition-all h-0.5 bg-slate-600 group-hover:w-3/6"
           ></span>
         </a>
+
         <a
+          v-if="user"
           href="javascript:void(0)"
+          @click.prevent="goRegisteredAuctions"
           class="cursor-pointer relative text-base text-slate-800 group w-max"
         >
-          <span>Kiến thức</span>
-          <span
-            class="absolute -bottom-0.5 left-1/2 w-0 transition-all h-0.5 bg-slate-600 group-hover:w-3/6"
-          ></span>
-          <span
-            class="absolute -bottom-0.5 right-1/2 w-0 transition-all h-0.5 bg-slate-600 group-hover:w-3/6"
-          ></span>
-        </a>
-        <a
-          href="javascript:void(0)"
-          class="cursor-pointer relative text-base text-slate-800 group w-max"
-        >
-          <span>Tin tức</span>
+          <span>Phiên đấu đã đăng ký</span>
           <span
             class="absolute -bottom-0.5 left-1/2 w-0 transition-all h-0.5 bg-slate-600 group-hover:w-3/6"
           ></span>
@@ -106,6 +97,7 @@
           ></span>
         </a>
       </nav>
+      
       <!-- User section desktop -->
       <div class="hidden lg:flex items-center gap-1">
         <template v-if="user">
@@ -116,7 +108,7 @@
               @click="toggleNotifications"
               type="button"
               id="dropdownToggle"
-              class="inline-flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-slate-50"
+              class="inline-flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer"
             >
               <font-awesome-icon :icon="faBell" class="text-xl" style="color: #0f6bae" />
               <!-- Badge số thông báo chưa đọc -->
@@ -209,7 +201,8 @@
           <div class="relative group">
             <button
               type="button"
-              class="inline-flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-slate-50"
+              class="inline-flex items-center gap-2 py-1.5 px-2 rounded-md hover:bg-slate-50 cursor-pointer"
+              @click.prevent="goUserInfo"
             >
               <font-awesome-icon
                 :icon="faCircleUser"
@@ -374,16 +367,6 @@
           class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
           @click.prevent="goAuctionRoom"
           >Phòng đấu giá</a
-        >
-        <a
-          href="#"
-          class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
-          >Kiến thức</a
-        >
-        <a
-          href="#"
-          class="block py-2 rounded-md text-slate-700 hover:bg-slate-50 hover:text-sky-700"
-          >Tin tức</a
         >
 
         <!-- Tài khoản -->

@@ -29,7 +29,7 @@
 
       <!-- Danh mục -->
       <div class="relative">
-        <button ref="cateBtn" class="category-btn" @click="toggleCate">
+        <button ref="cateBtn" class="category-btn cursor-pointer" @click="toggleCate">
           <span class="i ph ph-list text-slate-500 mr-2"></span>
           {{ selectedCate?.tendm || "Danh mục" }}
           <svg
@@ -81,7 +81,7 @@
 
       <!-- Khu vực -->
       <div class="relative">
-        <button ref="regionBtn" class="category-btn" @click="toggleRegion">
+        <button ref="regionBtn" class="category-btn cursor-pointer" @click="toggleRegion">
           {{ regionLabel || "Khu vực" }}
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -130,7 +130,7 @@
 
       <!-- Mức giá -->
       <div class="relative">
-        <button ref="priceBtn" class="category-btn" @click="togglePrice">
+        <button ref="priceBtn" class="category-btn cursor-pointer" @click="togglePrice">
           {{ priceLabel || "Mức giá" }}
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -183,7 +183,7 @@
 
       <!-- Thời gian -->
       <div class="relative">
-        <button ref="dateBtn" class="category-btn" @click="toggleDate">
+        <button ref="dateBtn" class="category-btn cursor-pointer" @click="toggleDate">
           {{ dateLabel || "Thời gian" }}
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -214,7 +214,7 @@
                 <input
                   v-model="dateRange.from"
                   type="date"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
                 />
               </div>
               <div>
@@ -224,12 +224,12 @@
                 <input
                   v-model="dateRange.to"
                   type="date"
-                  class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 cursor-pointer"
                 />
               </div>
               <button
                 @click="applyDateFilter"
-                class="w-full bg-[#127fcf] hover:bg-[#1992eb] btn-flash text-white py-2 rounded-lg font-medium"
+                class="w-full bg-[#127fcf] hover:bg-[#1992eb] btn-flash text-white py-2 rounded-lg font-medium cursor-pointer"
               >
                 Áp dụng
               </button>

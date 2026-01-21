@@ -18,7 +18,7 @@
           '--curtain-out': CURTAIN_OUT + 'ms',
         }"
       >
-        <!-- Nền trượt (delay để curtain phủ trước) -->
+        <!-- Nền trượt -->
         <div
           class="auth-switcher transform-gpu transition-transform ease-[cubic-bezier(0.22,1,0.36,1)]"
           :class="[
@@ -137,7 +137,7 @@
               <button
                 type="submit"
                 :disabled="loading || disableFields('login')"
-                class="btn-primary btn-flash"
+                class="btn-primary btn-flash cursor-pointer"
               >
                 <span v-if="loading && mode === 'login'">Đang xử lý...</span>
                 <span v-else>Đăng nhập</span>
@@ -149,7 +149,7 @@
                 Chưa có tài khoản?
                 <button
                   type="button"
-                  class="text-sky-600 hover:text-sky-700 font-semibold"
+                  class="text-sky-600 hover:text-sky-700 font-semibold cursor-pointer"
                   @click="switchMode('register')"
                   :disabled="switching"
                 >
@@ -285,7 +285,7 @@
               <button
                 type="submit"
                 :disabled="loading || disableFields('register')"
-                class="btn-primary btn-flash mt-2"
+                class="btn-primary btn-flash mt-2 cursor-pointer"
               >
                 <span v-if="loading && mode === 'register'">Đang xử lý...</span>
                 <span v-else>Đăng ký</span>
@@ -297,7 +297,7 @@
                 Đã có tài khoản?
                 <button
                   type="button"
-                  class="text-sky-600 hover:text-sky-700 font-semibold"
+                  class="text-sky-600 hover:text-sky-700 font-semibold cursor-pointer"
                   @click="switchMode('login')"
                   :disabled="switching"
                 >

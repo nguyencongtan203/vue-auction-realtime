@@ -178,7 +178,6 @@ defineExpose({ open, close });
 <style scoped>
 @import "@/assets/styles/auth.css";
 
-/* Áp dụng CSS từ bạn cung cấp để match AuthPopup */
 .input {
   @apply w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition text-gray-800 placeholder-gray-400;
   background-color: #f9fafb;

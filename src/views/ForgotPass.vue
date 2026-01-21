@@ -41,31 +41,31 @@
 
         <button
           type="submit"
-          class="w-full rounded-xl bg-sky-600 text-white py-3 font-medium hover:bg-sky-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          class="w-full rounded-xl bg-sky-600 text-white py-3 font-medium hover:bg-sky-700 transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           :disabled="loading"
         >
           <span v-if="loading">Đang gửi...</span>
           <span v-else>Gửi link xác thực</span>
         </button>
 
-        <div class="flex items-center justify-between text-sm pt-2">
+        <div class="flex items-center justify-end text-sm pt-2">
           <button
             type="button"
-            class="text-gray-600 hover:text-gray-900"
+            class="text-sky-700 hover:text-sky-900 font-medium cursor-pointer"
             @click="goHome"
             :disabled="loading"
           >
             Về trang chủ
           </button>
 
-          <button
+          <!-- <button
             type="button"
             class="text-sky-700 hover:text-sky-900 font-medium"
             @click="goLogin"
             :disabled="loading"
           >
             Quay lại đăng nhập
-          </button>
+          </button> -->
         </div>
       </form>
     </div>
